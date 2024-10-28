@@ -29,60 +29,59 @@
 ;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
 
 ;;; Requirements:
+;;; for session support, q-mode is needed
 
-;;(require 'ob)
-;;(require 'ob-ref)
-;;(require 'ob-comint)
-;;(require 'ob-eval)
+;;; Code:
+
+(require 'org-macs)
+(org-assert-version)
+
+(require 'ob)
+(require 'ob-eval)
+(require 'org-macs)
 (require 'q-mode) ;; Require q-mode for interactive support
 
+(defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
 
 (defvar org-babel-default-header-args:q '())
 
-(defun org-babel-expand-body:q (body params &optional processed-params)
-  "Expand BODY according to PARAMS, return the expanded body."
-  (let ((vars (org-babel--get-vars (or processed-params (org-babel-process-params params)))))
-    (concat
-     (mapconcat
-      (lambda (pair)
-        (format "%s:%S"
-                (car pair) (org-babel-q-var-to-q (cdr pair))))
-      vars "\n")
-     "\n" body "\n")))
+;;(defun org-babel-expand-body:q (body params &optional processed-params)
+;;  "Expand BODY according to PARAMS, return the expanded body."
+;;  (let ((vars (org-babel--get-vars (or processed-params (org-babel-process-params params)))))
+;;    (concat
+;;     (mapconcat
+;;      (lambda (pair)
+;;        (format "%s:%S"
+;;                (car pair) (org-babel-q-var-to-q (cdr pair))))
+;;      vars "\n")
+;;     "\n" body "\n")))
 
 (defun org-babel-execute:q (body params)
-  "Execute a block of q code with org-babel."
-  (message "Executing q source code block")
-  (let* ((processed-params (org-babel-process-params params))
-         (session (org-babel-q-initiate-session (cdr (assq :session processed-params))))
-         (full-body (org-babel-expand-body:q body params processed-params)))
-    (if session
-        ;; If session is available, send code to the running session
-        (org-babel-comint-with-output (session "*q*" full-body)
-          (insert full-body)
-          (comint-send-input nil t))
-      ;; For non-session code, evaluate using `org-babel-eval`
-      (org-babel-eval "q" full-body))))
+  "Execute q BODY according to PARAMS.
+This function is called by `org-babel-execute-src-block'"
+  (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q")))
+    (with-temp-file tmp-src-file (insert body))
+    (org-babel-eval (format "q %s" (org-babel-process-file-name tmp-src-file)) ""))
 
-(defun org-babel-prep-session:q (session params)
-  "Prepare SESSION according to the header arguments specified in PARAMS."
-  (org-babel-q-initiate-session session))
-
-(defun org-babel-q-var-to-q (var)
-  "Convert an elisp var into a string of q source code
-specifying a var of the same value."
-  (format "%S" var))
-
-(defun org-babel-q-initiate-session (&optional session)
-  "If there is not a current inferior-process-buffer in SESSION then create.
-Return the initialized session."
-  (unless (string= session "none")
-    (if (not (comint-check-proc "*q*"))
-        (progn
-          (run-q) ;; Starts a new q process with q-mode’s run-q function
-          (get-buffer "*q*"))
-      (get-buffer "*q*"))))
+;;(defun org-babel-prep-session:q (session params)
+;;  "Prepare SESSION according to the header arguments specified in PARAMS."
+;;  (org-babel-q-initiate-session session))
+;;
+;;(defun org-babel-q-var-to-q (var)
+;;  "Convert an elisp var into a string of q source code
+;;specifying a var of the same value."
+;;  (format "%S" var))
+;;
+;;(defun org-babel-q-initiate-session (&optional session)
+;;  "If there is not a current inferior-process-buffer in SESSION then create.
+;;Return the initialized session."
+;;  (unless (string= session "none")
+;;    (if (not (comint-check-proc "*q*"))
+;;        (progn
+;;          (run-q) ;; Starts a new q process with q-mode’s run-q function
+;;          (get-buffer "*q*"))
+;;      (get-buffer "*q*"))))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
