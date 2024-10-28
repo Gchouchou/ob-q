@@ -33,13 +33,14 @@
 
 ;;; Code:
 
-(require 'org-macs)
-(org-assert-version)
+;; (require 'org-macs)
+;;(org-assert-version)
 
+(require 'org)
 (require 'ob)
 (require 'ob-eval)
-(require 'org-macs)
-(require 'q-mode) ;; Require q-mode for interactive support
+;; (require 'org-macs)
+;; (require 'q-mode) ;; Require q-mode for interactive support
 
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
@@ -60,9 +61,10 @@
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
-  (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q")))
+  (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
+         (cmd (format "q %s" (org-babel-process-file-name tmp-src-file))))
     (with-temp-file tmp-src-file (insert body))
-    (org-babel-eval (format "q %s" (org-babel-process-file-name tmp-src-file)) ""))
+    (org-babel-eval cmd "" )))
 
 ;;(defun org-babel-prep-session:q (session params)
 ;;  "Prepare SESSION according to the header arguments specified in PARAMS."
