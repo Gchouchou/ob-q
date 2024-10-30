@@ -48,16 +48,6 @@
 
 (defvar org-babel-default-header-args:q '())
 
-;;(defun org-babel-expand-body:q (body params &optional processed-params)
-;;  "Expand BODY according to PARAMS, return the expanded body."
-;;  (let ((vars (org-babel--get-vars (or processed-params (org-babel-process-params params)))))
-;;    (concat
-;;     (mapconcat
-;;      (lambda (pair)
-;;        (format "%s:%S"
-;;                (car pair) (org-babel-q-var-to-q (cdr pair))))
-;;      vars "\n")
-;;     "\n" body "\n")))
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
 To be implemented, currently just returns BODY"
