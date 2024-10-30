@@ -30,6 +30,7 @@
 
 ;;; Requirements:
 ;;; for session support, q-mode is needed
+;;; Package-Requires ((emacs "24.1"))
 
 ;;; Code:
 
@@ -40,7 +41,7 @@
 (require 'ob)
 (require 'ob-eval)
 ;; (require 'org-macs)
-;; (require 'q-mode) ;; Require q-mode for interactive support
+(require 'q-mode) ;; Require q-mode for interactive support
 
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
@@ -57,33 +58,42 @@
 ;;                (car pair) (org-babel-q-var-to-q (cdr pair))))
 ;;      vars "\n")
 ;;     "\n" body "\n")))
+(defun org-babel-expand-body:q (body params &optional processed-params)
+  "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
+To be implemented, currently just returns BODY"
+  (let* ((session (cdr (assoc :session processed-params)))
+         (qcommand (if session
+                       (concat "h:hopen `:" session ";\nresult:{$[10h=type x; x;.Q.s x]} h")
+                     "result:{$[10h=type x; x;.Q.s x]} eval parse" ))
+         (qendcommand (if session "hclose h;\n" "")))
+    (concat qcommand "\""
+            ;; escape all " to \" so that we can turn into a string
+            (replace-regexp-in-string "\"" "\\\""
+                                      ;; also hack and turn newline to semicolon hacking
+                                      (replace-regexp-in-string "\n" ";" (q-strip body))
+                                      nil 'literal)
+            "\";\n" qendcommand "result\n\\\\")))
 
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
-  (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-         (cmd (format "q %s" (org-babel-process-file-name tmp-src-file))))
-    (with-temp-file tmp-src-file (insert body))
-    (org-babel-eval cmd "" )))
+  (let* ((processed-params (org-babel-process-params params))
+         ;; set the session if the value of the session keyword
+         ;;(session (cdr (assoc :session processed-params)))
+         (full-body (org-babel-expand-body:q body params processed-params))
+         (tmp-src-file (org-babel-temp-file "q-src-" ".q"))
+         (cmd (format "q %s" (org-babel-process-file-name tmp-src-file)))
+         (raw-output (progn (with-temp-file tmp-src-file (insert full-body))
+                            (ob-q-post-process-result (org-babel-eval cmd "")))))
+    ;;(ob-q-post-process-result (org-babel-eval cmd "" )))))
 
-;;(defun org-babel-prep-session:q (session params)
-;;  "Prepare SESSION according to the header arguments specified in PARAMS."
-;;  (org-babel-q-initiate-session session))
-;;
-;;(defun org-babel-q-var-to-q (var)
-;;  "Convert an elisp var into a string of q source code
-;;specifying a var of the same value."
-;;  (format "%S" var))
-;;
-;;(defun org-babel-q-initiate-session (&optional session)
-;;  "If there is not a current inferior-process-buffer in SESSION then create.
-;;Return the initialized session."
-;;  (unless (string= session "none")
-;;    (if (not (comint-check-proc "*q*"))
-;;        (progn
-;;          (run-q) ;; Starts a new q process with q-mode’s run-q function
-;;          (get-buffer "*q*"))
-;;      (get-buffer "*q*"))))
+    (message (format "raw-output is %s" raw-output))
+    raw-output))
+
+(defun ob-q-post-process-result (result)
+  "Transform the query RESULT and replace all the escaped literals to correct form with read."
+  (message (format "post-processing result=%s" result))
+  (read result))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
