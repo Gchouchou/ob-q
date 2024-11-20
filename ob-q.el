@@ -30,7 +30,7 @@
 
 ;;; Requirements:
 ;;; for session support, q-mode is needed
-;;; Package-Requires ((emacs "24.1"))
+;;; Package-Requires: ((emacs "24.1"))
 
 ;;; Code:
 
@@ -81,7 +81,7 @@ This function is called by `org-babel-execute-src-block'"
     raw-output))
 
 (defun ob-q-post-process-result (result)
-  "Transform the query RESULT and replace all the escaped literals to correct form with read."
+  "Transform the query RESULT with read."
   (message (format "post-processing result=%s" result))
   (read result))
 
