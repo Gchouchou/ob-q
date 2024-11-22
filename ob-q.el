@@ -52,18 +52,19 @@
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
 To be implemented, currently just returns BODY"
   (let* ((session (cdr (assoc :session processed-params)))
-         (qcommand (if session
-                       (concat "h:hopen `:" session ";\nresult:{$[10h=type x; x;.Q.s x]} h")
-                     "result:{$[10h=type x; x;.Q.s x]} eval parse" ))
-         (qendcommand (if session "hclose h;\n" "")))
-    (concat qcommand "\""
-            ;; escape all " to \" so that we can turn into a string
-            (replace-regexp-in-string "\"" "\\\""
-                                      ;; also hack and turn newline to semicolon hacking
-                                      (replace-regexp-in-string "\n" ";" (q-strip body))
-                                      nil 'literal)
-            "\";\n" qendcommand "result\n\\\\")))
+         (result-type (cdr (assoc :result-type processed-params)))
+         (type-processed-body
+          (if (eql result-type 'value)
+              ;; only function wrap the stripped body
+              (ob-q-fun-wrapper (q-strip body))
+            (q-strip body))))
+    ;; TODO maybe use trap to not enter debugger for no reason
+    (if session
+        (throw 'NotImplemented t)
+      body)))
 
+;; example params
+;;((:var data . -1) (:var i . dddeaf) (:colname-names) (:rowname-names) (:result-params replace) (:result-type . value) (:results . replace) (:exports . code) (:session . none) (:cache . no) (:noweb . no) (:hlines . no) (:tangle . no))
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
@@ -76,7 +77,7 @@ This function is called by `org-babel-execute-src-block'"
          (raw-output (progn (with-temp-file tmp-src-file (insert full-body))
                             (ob-q-post-process-result (org-babel-eval cmd "")))))
     ;;(ob-q-post-process-result (org-babel-eval cmd "" )))))
-
+    (message (format "processed-params are %s" processed-params))
     (message (format "raw-output is %s" raw-output))
     raw-output))
 
@@ -84,6 +85,14 @@ This function is called by `org-babel-execute-src-block'"
   "Transform the query RESULT with read."
   (message (format "post-processing result=%s" result))
   (read result))
+
+(defun ob-q-var-to-q (var)
+  "Convert an elisp VAR into a string of q source code."
+  (format "%S" var))
+
+(defun ob-q-fun-wrapper (body)
+  "Wraps BODY in a q lambda."
+  (concat "{ 1 \"org-babel-q-BOF\\n\";.Q.S[x];1 \"org-babel-q-EOF\" }{[]" (replace-regexp-in-string "\n" ";" body) "}[]"))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
