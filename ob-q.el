@@ -91,7 +91,13 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-var-to-q (var)
   "Convert an elisp VAR into a string of q source code."
-  (format "%S" var))
+  (pcase (type-of var)
+    ('integer (format "%S" var))
+    ('float (format "%S" var))
+    ('string (format "%S" var))
+    ('symbol (format "`%S" var))
+    (_ (format "%S" var))))
+;; TODO handle date time formats...
 
 (defun ob-q-fun-wrapper (body &optional vars)
   "Wraps BODY in a q lambda with VARS as parameters."
