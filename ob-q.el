@@ -97,15 +97,23 @@ This function is called by `org-babel-execute-src-block'"
   "Wraps BODY in a q lambda with VARS as parameters."
   (concat "{["
           (when vars
-            (apply concat
-             (mapcar #'car vars)))
-          "]" (replace-regexp-in-string "\n" ";\n" body) "}["
+            (substring (apply
+                        #'concat
+                        (mapcar
+                         (lambda (pair)
+                           (format ";%s" (car pair))) vars))
+                       1))
+          "]\n " (replace-regexp-in-string "\n" ";\n " body) "}["
           (when vars
-            (concat
-             (mapcar #'cdr vars)))
+            (substring (apply
+                        #'concat
+                        (mapcar
+                         (lambda (pair)
+                           (format ";%S" (cdr pair))) vars))
+                       1))
           "]"))
-; car then mapcar
-;(apply #'concat (mapcar (lambda (x) (concat (symbol-name (car x)) ";") )  '(( data . "Alice") ( last . "Smith") (age . 30))))
+;; TODO make a function to convert lists,tables etc to q lists
+
 (defun ob-q-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
 Return the initialized session."
