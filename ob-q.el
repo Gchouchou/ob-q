@@ -59,15 +59,15 @@ To be implemented, currently just returns BODY"
               (ob-q-fun-wrapper (q-strip body))
             (q-strip body))))
     ;; TODO maybe use trap to not enter debugger for no reason
-    (if session
-        (throw 'NotImplemented t)
-      body)))
+    (message (format "expanded body %s" type-processed-body))
+      type-processed-body))
 
 ;; example params
 ;;((:var data . -1) (:var i . dddeaf) (:colname-names) (:rowname-names) (:result-params replace) (:result-type . value) (:results . replace) (:exports . code) (:session . none) (:cache . no) (:noweb . no) (:hlines . no) (:tangle . no))
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
+  (require 'ob-q)
   (let* ((processed-params (org-babel-process-params params))
          ;; set the session if the value of the session keyword
          ;;(session (cdr (assoc :session processed-params)))
@@ -75,8 +75,8 @@ This function is called by `org-babel-execute-src-block'"
          (tmp-src-file (org-babel-temp-file "q-src-" ".q"))
          (cmd (format "q %s" (org-babel-process-file-name tmp-src-file)))
          (raw-output (progn (with-temp-file tmp-src-file (insert full-body))
-                            (ob-q-post-process-result (org-babel-eval cmd "")))))
-    ;;(ob-q-post-process-result (org-babel-eval cmd "" )))))
+                            (org-babel-eval cmd ""))))
+    ;(ob-q-post-process-result (org-babel-eval cmd "" )))))
     (message (format "processed-params are %s" processed-params))
     (message (format "raw-output is %s" raw-output))
     raw-output))
@@ -92,7 +92,20 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-fun-wrapper (body)
   "Wraps BODY in a q lambda."
-  (concat "{ 1 \"org-babel-q-BOF\\n\";.Q.S[x];1 \"org-babel-q-EOF\" }{[]" (replace-regexp-in-string "\n" ";" body) "}[]"))
+  (concat "{[]" (replace-regexp-in-string "\n" ";\n" body) "}[]"))
+
+(defun ob-q-initiate-session (&optional session)
+  "If there is not a current inferior-process-buffer in SESSION then create.
+Return the initialized session."
+  (unless (string= session "none")
+    (or (get-buffer session)
+        (let ((buffer (prog2 (q "" "" "")
+                          (get-buffer q-active-buffer)
+                        (setq q-active-buffer nil))))
+          (when buffer
+            (with-current-buffer buffer
+              (rename-buffer session)
+              (current-buffer)))))))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
