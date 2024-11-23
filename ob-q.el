@@ -34,9 +34,6 @@
 
 ;;; Code:
 
-;; (require 'org-macs)
-;;(org-assert-version)
-
 (require 'org)
 (require 'ob)
 (require 'ob-eval)
@@ -57,7 +54,11 @@ To be implemented, currently just returns BODY"
           (if (eql result-type 'value)
               ;; only function wrap the stripped body
               (ob-q-fun-wrapper (q-strip body) vars)
-            (q-strip body))))
+            (concat (mapconcat
+                     (lambda (pair)
+                       (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
+                     vars)
+                    (q-strip body)))))
     ;; TODO maybe use trap to not enter debugger for no reason
     (message (format "expanded body %s" type-processed-body))
       type-processed-body))
