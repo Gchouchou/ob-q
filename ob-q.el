@@ -30,7 +30,7 @@
 
 ;;; Requirements:
 ;;; for session support, q-mode is needed
-;;; Package-Requires: ((emacs "24.1"))
+;;; Package-Requires: ((emacs "26.1"))
 
 ;;; Code:
 
@@ -51,12 +51,12 @@
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
 To be implemented, currently just returns BODY"
-  (let* ((session (cdr (assoc :session processed-params)))
+  (let* ((vars (org-babel--get-vars processed-params))
          (result-type (cdr (assoc :result-type processed-params)))
          (type-processed-body
           (if (eql result-type 'value)
               ;; only function wrap the stripped body
-              (ob-q-fun-wrapper (q-strip body))
+              (ob-q-fun-wrapper (q-strip body) vars)
             (q-strip body))))
     ;; TODO maybe use trap to not enter debugger for no reason
     (message (format "expanded body %s" type-processed-body))
@@ -71,6 +71,9 @@ This function is called by `org-babel-execute-src-block'"
   (let* ((processed-params (org-babel-process-params params))
          ;; set the session if the value of the session keyword
          ;;(session (cdr (assoc :session processed-params)))
+         (session (unless (string= (cdr (assq :session processed-params)) "none")
+                    (ob-q-initiate-session
+                     (cdr (assq :session processed-params)))))
          (full-body (org-babel-expand-body:q body params processed-params))
          (tmp-src-file (org-babel-temp-file "q-src-" ".q"))
          (cmd (format "q %s" (org-babel-process-file-name tmp-src-file)))
@@ -90,10 +93,19 @@ This function is called by `org-babel-execute-src-block'"
   "Convert an elisp VAR into a string of q source code."
   (format "%S" var))
 
-(defun ob-q-fun-wrapper (body)
-  "Wraps BODY in a q lambda."
-  (concat "{[]" (replace-regexp-in-string "\n" ";\n" body) "}[]"))
-
+(defun ob-q-fun-wrapper (body &optional vars)
+  "Wraps BODY in a q lambda with VARS as parameters."
+  (concat "{["
+          (when vars
+            (apply concat
+             (mapcar #'car vars)))
+          "]" (replace-regexp-in-string "\n" ";\n" body) "}["
+          (when vars
+            (concat
+             (mapcar #'cdr vars)))
+          "]"))
+; car then mapcar
+;(apply #'concat (mapcar (lambda (x) (concat (symbol-name (car x)) ";") )  '(( data . "Alice") ( last . "Smith") (age . 30))))
 (defun ob-q-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
 Return the initialized session."
