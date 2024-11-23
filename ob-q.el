@@ -70,10 +70,9 @@ This function is called by `org-babel-execute-src-block'"
   (require 'ob-q)
   (let* ((processed-params (org-babel-process-params params))
          ;; set the session if the value of the session keyword
-         ;;(session (cdr (assoc :session processed-params)))
-         (session (unless (string= (cdr (assq :session processed-params)) "none")
-                    (ob-q-initiate-session
-                     (cdr (assq :session processed-params)))))
+         (session-name (cdr (assoc :session processed-params)))
+         (session (unless (string= session-name "none")
+                    (ob-q-initiate-session session-name)))
          (full-body (org-babel-expand-body:q body params processed-params))
          (tmp-src-file (org-babel-temp-file "q-src-" ".q"))
          (cmd (format "q %s" (org-babel-process-file-name tmp-src-file)))
@@ -96,6 +95,16 @@ This function is called by `org-babel-execute-src-block'"
     ('float (format "%S" var))
     ('string (format "%S" var))
     ('symbol (format "`%S" var))
+    ('cons
+     (concat
+      "("
+      (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";") ; do it recursively
+      ")"))
+    ('vector
+     (concat
+      "("
+      (mapconcat #'ob-q-var-to-q var ";") ; do it recursively
+      ")"))
     (_ (format "%S" var))))
 ;; TODO handle date time formats...
 
@@ -103,20 +112,16 @@ This function is called by `org-babel-execute-src-block'"
   "Wraps BODY in a q lambda with VARS as parameters."
   (concat "{["
           (when vars
-            (substring (apply
-                        #'concat
-                        (mapcar
-                         (lambda (pair)
-                           (format ";%s" (car pair))) vars))
-                       1))
-          "]\n " (replace-regexp-in-string "\n" ";\n " body) "}["
+            (mapconcat
+             (lambda (pair)
+               (symbol-name (car pair)))
+             vars ";"))
+          "]\n " (replace-regexp-in-string "\n" ";\n " body) "\n }["
           (when vars
-            (substring (apply
-                        #'concat
-                        (mapcar
-                         (lambda (pair)
-                           (format ";%S" (cdr pair))) vars))
-                       1))
+            (mapconcat
+             (lambda (pair)
+               (ob-q-var-to-q (cdr pair)))
+              vars ";"))
           "]"))
 ;; TODO make a function to convert lists,tables etc to q lists
 
