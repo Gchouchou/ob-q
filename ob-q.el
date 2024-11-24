@@ -37,6 +37,7 @@
 (require 'org)
 (require 'ob)
 (require 'ob-eval)
+(require 'ob-comint)
 ;; (require 'org-macs)
 (require 'q-mode) ;; Require q-mode for interactive support
 
@@ -45,6 +46,11 @@
 
 (defvar org-babel-default-header-args:q '())
 
+(defvar ob-q-eoe-indicator "1 \"org_babel_q_eoe\\n\";"
+  "String to indicate that evaluation has completed.")
+(defvar ob-q-eoe-output "org_babel_q_eoe"
+  "String to indicate that evaluation has completed.")
+
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
 To be implemented, currently just returns BODY"
@@ -52,8 +58,10 @@ To be implemented, currently just returns BODY"
          (result-type (cdr (assoc :result-type processed-params)))
          (type-processed-body
           (if (eql result-type 'value)
-              ;; only function wrap the stripped body
-              (ob-q-fun-wrapper (q-strip body) vars)
+              (concat
+               (ob-q-preprocess-fun processed-params)
+               ;; only function wrap the stripped body
+               (ob-q-fun-wrapper (q-strip body) vars))
             (concat (mapconcat
                      (lambda (pair)
                        (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
@@ -71,19 +79,36 @@ This function is called by `org-babel-execute-src-block'"
   (require 'ob-q)
   (let* ((processed-params (org-babel-process-params params))
          ;; set the session if the value of the session keyword
-         (session-name (cdr (assoc :session processed-params)))
-         (session (unless (string= session-name "none")
-                    (ob-q-initiate-session session-name)))
          (full-body (org-babel-expand-body:q body params processed-params))
-         (tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-         (cmd (format "q %s" (org-babel-process-file-name tmp-src-file)))
-         (raw-output (progn (with-temp-file tmp-src-file (insert full-body))
-                            (org-babel-eval cmd ""))))
-    ;(ob-q-post-process-result (org-babel-eval cmd "" )))))
+         (session-name (cdr (assoc :session processed-params)))
+         (raw-output
+          (if (string= session-name "none")
+              (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
+                     (cmd (format "q %s" (org-babel-process-file-name tmp-src-file))))
+                (message "not using session")
+                (with-temp-file tmp-src-file (insert full-body))
+                (org-babel-eval cmd ""))
+            (let* ((session (unless (string= session-name "none")
+                              (ob-q-initiate-session session-name))))
+            (message "using session")
+              (mapconcat
+               #'org-trim
+               (butlast
+                (org-babel-comint-with-output
+                   (session ob-q-eoe-output)
+                 (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
+                 (comint-send-input nil t))
+                1)))))); bug with new line, and also bug when initializing session
     (message (format "processed-params are %s" processed-params))
     (message (format "raw-output is %s" raw-output))
-    raw-output))
-
+    (if (eql 'value (cdr (assoc :result-type processed-params)))
+        (substring
+         raw-output
+         (+
+          (length "ob-q-output-start\\n") ;; define a string for start of value
+          (string-match-p "ob-q-output-start" raw-output)))
+      raw-output)))
+;(substring (+ (length "ob-q-output-start") (string-match "ob-q-output-start" " ob-q-output-start hello")))
 (defun ob-q-post-process-result (result)
   "Transform the query RESULT with read."
   (message (format "post-processing result=%s" result))
@@ -124,6 +149,15 @@ This function is called by `org-babel-execute-src-block'"
                (ob-q-var-to-q (cdr pair)))
               vars ";"))
           "]"))
+
+(defun ob-q-preprocess-fun (processed-params)
+  "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
+  ;TODO Use a let statement to find what type it expects, only care if it's verbatim or not
+  (when (eql 'value (cdr (assoc :result-type processed-params)))
+    (concat
+     "{[result]1 \"ob-q-output-start\\n\";"
+     "1 .Q.s result;"
+     "}")))
 
 (defun ob-q-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
