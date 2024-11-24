@@ -30,7 +30,7 @@
 
 ;;; Requirements:
 ;;; for session support, q-mode is needed
-;;; Package-Requires: ((emacs "26.1"))
+;;; Package-Requires: ((emacs "27.1"))
 
 ;;; Code:
 
@@ -91,23 +91,23 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-var-to-q (var)
   "Convert an elisp VAR into a string of q source code."
-  (pcase (type-of var)
-    ('integer (format "%S" var))
-    ('float (format "%S" var))
-    ('string (format "%S" var))
-    ('symbol (format "`%S" var))
-    ('cons
-     (concat
-      "("
-      (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";") ; do it recursively
-      ")"))
-    ('vector
-     (concat
-      "("
-      (mapconcat #'ob-q-var-to-q var ";") ; do it recursively
-      ")"))
-    (_ (format "%S" var))))
+  (cond
+   ((null var) nil)
+   ((or (vectorp var)
+        (proper-list-p var))
+    (concat
+     "("
+     (mapconcat #'ob-q-var-to-q var ";") ; do it recursively
+     ")"))
+   ((listp var)
+    (concat
+     "("
+     (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";") ; do it recursively
+     ")"))
+   ((symbolp var) (format "`%S" var))
+   (t (format "%S" var))))
 ;; TODO handle date time formats...
+;; TODO emacs table are still going to suck...
 
 (defun ob-q-fun-wrapper (body &optional vars)
   "Wraps BODY in a q lambda with VARS as parameters."
@@ -124,7 +124,6 @@ This function is called by `org-babel-execute-src-block'"
                (ob-q-var-to-q (cdr pair)))
               vars ";"))
           "]"))
-;; TODO make a function to convert lists,tables etc to q lists
 
 (defun ob-q-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
