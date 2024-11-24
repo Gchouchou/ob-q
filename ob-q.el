@@ -105,7 +105,7 @@ This function is called by `org-babel-execute-src-block'"
         (substring
          raw-output
          (+
-          (length "ob-q-output-start\\n") ;; define a string for start of value
+          (length "ob-q-output-start") ;; define a string for start of value
           (string-match-p "ob-q-output-start" raw-output)))
       raw-output)))
 ;(substring (+ (length "ob-q-output-start") (string-match "ob-q-output-start" " ob-q-output-start hello")))
@@ -155,7 +155,7 @@ This function is called by `org-babel-execute-src-block'"
   ;TODO Use a let statement to find what type it expects, only care if it's verbatim or not
   (when (eql 'value (cdr (assoc :result-type processed-params)))
     (concat
-     "{[result]1 \"ob-q-output-start\\n\";"
+     "{[result]1 \"ob-q-output-start\";"
      "1 .Q.s result;"
      "}")))
 
