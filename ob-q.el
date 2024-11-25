@@ -171,6 +171,7 @@ Return the initialized session."
             (with-current-buffer buffer
               (rename-buffer session)
               (current-buffer)))))))
+;; TODO Bug if the process gets killed, can't be fixed
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
