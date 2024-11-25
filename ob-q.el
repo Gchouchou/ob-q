@@ -108,7 +108,7 @@ This function is called by `org-babel-execute-src-block'"
           (length "ob-q-output-start") ;; define a string for start of value
           (string-match-p "ob-q-output-start" raw-output)))
       raw-output)))
-;(substring (+ (length "ob-q-output-start") (string-match "ob-q-output-start" " ob-q-output-start hello")))
+
 (defun ob-q-post-process-result (result)
   "Transform the query RESULT with read."
   (message (format "post-processing result=%s" result))
