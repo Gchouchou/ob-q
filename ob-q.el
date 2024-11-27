@@ -188,6 +188,7 @@ This function is called by `org-babel-execute-src-block'"
         ;; how to parse a table?
         ".Q.qt result;"
         "\"\\n\" sv \";\" 0: result;"
+        ;; TODO parse a dictionary into list of lists
         ".Q.s result"
         "];"
         "1 \"\\n\";"))
