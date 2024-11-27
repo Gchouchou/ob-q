@@ -47,9 +47,9 @@
 (defvar org-babel-default-header-args:q '())
 
 (defvar ob-q-soe-indicator "1 \"org_babel_q_eoe\";"
-  "String to indicate that evaluation has start.")
+  "String to indicate outputting evaluation output.")
 (defvar ob-q-soe-output "org_babel_q_eoe"
-  "String to indicate that evaluation has start.")
+  "String to indicate outputting evaluation output.")
 (defvar ob-q-eoe-indicator "1 \"org_babel_q_eoe\\n\";"
   "String to indicate that evaluation has completed.")
 (defvar ob-q-eoe-output "org_babel_q_eoe"
