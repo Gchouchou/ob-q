@@ -46,6 +46,10 @@
 
 (defvar org-babel-default-header-args:q '())
 
+(defvar ob-q-soe-indicator "1 \"org_babel_q_eoe\";"
+  "String to indicate that evaluation has start.")
+(defvar ob-q-soe-output "org_babel_q_eoe"
+  "String to indicate that evaluation has start.")
 (defvar ob-q-eoe-indicator "1 \"org_babel_q_eoe\\n\";"
   "String to indicate that evaluation has completed.")
 (defvar ob-q-eoe-output "org_babel_q_eoe"
@@ -85,12 +89,10 @@ This function is called by `org-babel-execute-src-block'"
           (if (string= session-name "none")
               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
                      (cmd (format "q %s" (org-babel-process-file-name tmp-src-file))))
-                (message "not using session")
                 (with-temp-file tmp-src-file (insert full-body))
                 (org-babel-eval cmd ""))
             (let* ((session (unless (string= session-name "none")
                               (ob-q-initiate-session session-name))))
-            (message "using session")
               (mapconcat
                #'org-trim
                (butlast
@@ -99,20 +101,36 @@ This function is called by `org-babel-execute-src-block'"
                  (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
                  (comint-send-input nil t))
                 1)))))); bug with new line, and also bug when initializing session
-    (message (format "processed-params are %s" processed-params))
-    (message (format "raw-output is %s" raw-output))
+    (message (format "raw output is %s" raw-output))
     (if (eql 'value (cdr (assoc :result-type processed-params)))
-        (substring
-         raw-output
-         (+
-          (length "ob-q-output-start") ;; define a string for start of value
-          (string-match-p "ob-q-output-start" raw-output)))
+        (let ((raw-value
+               (substring
+                raw-output
+                (+ (length ob-q-soe-output) ;; define a string for start of value
+                   (string-match-p ob-q-soe-output raw-output)))))
+          (message (format "raw-value is %s" raw-value))
+          (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+              raw-value
+            (ob-q-post-process-result raw-value)))
       raw-output)))
 
 (defun ob-q-post-process-result (result)
-  "Transform the query RESULT with read."
-  (message (format "post-processing result=%s" result))
-  (read result))
+  "Convert the RESULT to elisp list."
+  (message (format "pre-proccessed-result is %s" result))
+  (let* ((delim (string-match-p ";" result))
+         (type (string-to-number (substring result 0 delim)))
+         (split-result (substring result (+ delim 1))))
+    (message (format "split-result is %s" split-result))
+    (cond
+     ((and (<= type 20) (>= type 0))
+      ;; it's a list
+      (mapcar #'read (split-string split-result ";")))
+     ((or (= type 98) (= type 99))
+      ;; it's a table
+      (mapcar (lambda (row)
+                (split-string row ";"))
+              (butlast (split-string split-result "\n") 1)))
+     (t (read split-result)))))
 
 (defun ob-q-var-to-q (var)
   "Convert an elisp VAR into a string of q source code."
@@ -155,22 +173,40 @@ This function is called by `org-babel-execute-src-block'"
   ;TODO Use a let statement to find what type it expects, only care if it's verbatim or not
   (when (eql 'value (cdr (assoc :result-type processed-params)))
     (concat
-     "{[result]1 \"ob-q-output-start\";"
-     "1 .Q.s result;"
+     "{[result]"
+     ob-q-soe-indicator
+     (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+         ;; when in verbatim use q string maker
+         "1 .Q.s result;"
+       ;; or else try to make something parsable
+       (concat
+        "rtype:type result;"
+        "1 string rtype;"
+        "1 \";\";"
+        "1 $["
+        ;; lists can be sv'ed
+        "rtype within (0;20);\";\" sv .Q.s each result;"
+        ;; how to parse a table?
+        ".Q.qt result;"
+        "\"\\n\" sv \";\" 0: result;"
+        ".Q.s result"
+        "];"
+        "1 \"\\n\";"))
      "}")))
 
 (defun ob-q-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
 Return the initialized session."
   (unless (string= session "none")
-    (or (get-buffer session)
-        (let ((buffer (prog2 (q "" "" "")
-                          (get-buffer q-active-buffer)
-                        (setq q-active-buffer nil))))
-          (when buffer
-            (with-current-buffer buffer
-              (rename-buffer session)
-              (current-buffer)))))))
+    (if (get-buffer-process (get-buffer session))
+        (get-buffer session)
+      (let ((buffer (prog2 (q)
+                        (get-buffer q-active-buffer)
+                      (setq q-active-buffer nil))))
+        (when buffer
+          (with-current-buffer buffer
+            (rename-buffer session)
+            (current-buffer)))))))
 ;; TODO Bug if the process gets killed, can't be fixed
 
 (provide 'ob-q)
