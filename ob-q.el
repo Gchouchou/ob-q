@@ -170,7 +170,6 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-preprocess-fun (processed-params)
   "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
-  ;TODO Use a let statement to find what type it expects, only care if it's verbatim or not
   (when (eql 'value (cdr (assoc :result-type processed-params)))
     (concat
      "{[result]"
