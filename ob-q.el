@@ -44,7 +44,7 @@
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
 
-(defvar org-babel-default-header-args:q '())
+(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
 
 (defvar ob-q-soe-indicator "1 \"org_babel_q_eoe\";"
   "String to indicate outputting evaluation output.")
@@ -122,15 +122,26 @@ This function is called by `org-babel-execute-src-block'"
          (split-result (substring result (+ delim 1))))
     (message (format "split-result is %s" split-result))
     (cond
-     ((and (<= type 20) (>= type 0))
+     ((or (< type 0) (= type 10)) (ob-q-read-atom split-result))
+     ((= type 0) (mapcar #'read (split-string split-result ";")))
+     ((and (<= type 20) (> type 0))
       ;; it's a list
-      (mapcar #'read (split-string split-result ";")))
+      (mapcar #'ob-q-read-atom (split-string split-result ";")))
      ((or (= type 98) (= type 99))
       ;; it's a table
       (mapcar (lambda (row)
                 (split-string row ";"))
               (butlast (split-string split-result "\n") 1)))
      (t (read split-result)))))
+
+(defun ob-q-read-atom (atom)
+  "Convert a q ATOM string to elisp atom."
+  (message (format "processing %s" atom))
+  (cond ((string-match "`[a-zA-Z0-9\\._]*" atom)
+         (make-symbol (substring (match-string 0 atom) 1)))
+        ((string-match "\"\\([^\"]\\|.\\)*\""  atom)
+         (substring (replace-regexp-in-string "\\\\n" "\n" (match-string 0 atom)) 1 -1))
+        (t atom)))
 
 (defun ob-q-var-to-q (var)
   "Convert an elisp VAR into a string of q source code."
@@ -183,6 +194,7 @@ This function is called by `org-babel-execute-src-block'"
         "1 string rtype;"
         "1 \";\";"
         "1 $["
+        "rtype=10h;.Q.s result;"
         ;; lists can be sv'ed
         "rtype within (0;20);\";\" sv .Q.s each result;"
         ;; how to parse a table?
