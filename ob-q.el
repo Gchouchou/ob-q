@@ -123,7 +123,7 @@ This function is called by `org-babel-execute-src-block'"
     (message (format "split-result is %s" split-result))
     (cond
      ((or (< type 0) (= type 10)) (ob-q-read-atom split-result))
-     ((= type 0) (mapcar #'read (split-string split-result ";")))
+     ((= type 0) (split-string split-result ";"))
      ((and (<= type 20) (> type 0))
       ;; it's a list
       (mapcar #'ob-q-read-atom (split-string split-result ";")))
@@ -132,7 +132,7 @@ This function is called by `org-babel-execute-src-block'"
       (mapcar (lambda (row)
                 (split-string row ";"))
               (butlast (split-string split-result "\n") 1)))
-     (t (read split-result)))))
+     (t split-result))))
 
 (defun ob-q-read-atom (atom)
   "Convert a q ATOM string to elisp atom."
