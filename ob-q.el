@@ -134,14 +134,15 @@ This function is called by `org-babel-execute-src-block'"
               (butlast (split-string split-result "\n") 1)))
      (t split-result))))
 
-(defun ob-q-read-atom (atom)
-  "Convert a q ATOM string to elisp atom."
-  (message (format "processing %s" atom))
-  (cond ((string-match "`[a-zA-Z0-9\\._]*" atom)
-         (make-symbol (substring (match-string 0 atom) 1)))
-        ((string-match "\"\\([^\"]\\|.\\)*\""  atom)
-         (substring (replace-regexp-in-string "\\\\n" "\n" (match-string 0 atom)) 1 -1))
-        (t atom)))
+(defun ob-q-read-atom (q-atom)
+  "Convert a Q-ATOM string to elisp atom."
+  (message (format "processing %s" q-atom))
+  (let ((q-atom (org-trim q-atom)))
+   (cond ((string-match "`[a-zA-Z0-9\\._]*" q-atom)
+         (make-symbol (substring (match-string 0 q-atom) 1)))
+        ((string-match "\"\\([^\"]\\|.\\)*\""  q-atom)
+         (substring (replace-regexp-in-string "\\\\n" "\n" (match-string 0 q-atom)) 1 -1))
+        (t q-atom))))
 
 (defun ob-q-var-to-q (var)
   "Convert an elisp VAR into a string of q source code."
