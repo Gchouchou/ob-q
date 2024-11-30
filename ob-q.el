@@ -47,9 +47,9 @@
 (defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
 
 (defvar ob-q-soe-indicator "1 \"org_babel_q_eoe\";"
-  "String to indicate outputting evaluation output.")
+  "String to indicate start of evaluation output.")
 (defvar ob-q-soe-output "org_babel_q_eoe"
-  "String to indicate outputting evaluation output.")
+  "String to indicate start of evaluation output.")
 (defvar ob-q-eoe-indicator "1 \"org_babel_q_eoe\\n\";"
   "String to indicate that evaluation has completed.")
 (defvar ob-q-eoe-output "org_babel_q_eoe"
@@ -124,10 +124,10 @@ This function is called by `org-babel-execute-src-block'"
     (cond
      ((or (< type 0) (= type 10)) (ob-q-read-atom split-result))
      ((= type 0) (split-string split-result ";"))
-     ((and (<= type 20) (> type 0))
+     ((<= 1 type 20)
       ;; it's a list
       (mapcar #'ob-q-read-atom (split-string split-result ";")))
-     ((or (= type 98) (= type 99))
+     ((<= 98 type 99)
       ;; it's a table
       (mapcar (lambda (row)
                 (split-string row ";"))
@@ -201,7 +201,8 @@ This function is called by `org-babel-execute-src-block'"
         ;; how to parse a table?
         ".Q.qt result;"
         "\"\\n\" sv \";\" 0: result;"
-        ;; TODO parse a dictionary into list of lists
+        "rtype=99h;"
+        "\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
         ".Q.s result"
         "];"
         "1 \"\\n\";"))
