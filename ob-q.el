@@ -44,8 +44,6 @@
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
 
-(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
-
 (defvar ob-q-soe-indicator "1 \"org_babel_q_eoe\";"
   "String to indicate start of evaluation output.")
 (defvar ob-q-soe-output "org_babel_q_eoe"
@@ -85,6 +83,7 @@ This function is called by `org-babel-execute-src-block'"
          ;; set the session if the value of the session keyword
          (full-body (org-babel-expand-body:q body params processed-params))
          (session-name (cdr (assoc :session processed-params)))
+         (isvalue (eql 'value (cdr (assoc :result-type processed-params))))
          (raw-output
           (if (string= session-name "none")
               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
@@ -100,16 +99,18 @@ This function is called by `org-babel-execute-src-block'"
                    (session ob-q-eoe-output)
                  (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
                  (comint-send-input nil t))
-                1)))))); bug with new line, and also bug when initializing session
+                1)
+               "\n"))))); bug with new line, and also bug when initializing session
     (message (format "raw output is %s" raw-output))
-    (if (eql 'value (cdr (assoc :result-type processed-params)))
+    (if isvalue
         (let ((raw-value
                (substring
                 raw-output
                 (+ (length ob-q-soe-output) ;; define a string for start of value
                    (string-match-p ob-q-soe-output raw-output)))))
           (message (format "raw-value is %s" raw-value))
-          (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+          (if (or (member "verbatim" (cdr (assoc :result-params processed-params)))
+               (not isvalue))
               raw-value
             (ob-q-post-process-result raw-value)))
       raw-output)))
@@ -122,27 +123,34 @@ This function is called by `org-babel-execute-src-block'"
          (split-result (substring result (+ delim 1))))
     (message (format "split-result is %s" split-result))
     (cond
-     ((or (< type 0) (= type 10)) (ob-q-read-atom split-result))
+     ((or (< type 0) (= type 10)) (ob-q-read-atom split-result type))
      ((= type 0) (split-string split-result ";"))
      ((<= 1 type 20)
       ;; it's a list
-      (mapcar #'ob-q-read-atom (split-string split-result ";")))
+      (mapcar (lambda (q-atom)
+                (ob-q-read-atom q-atom (- type))) (split-string split-result ";")))
      ((<= 98 type 99)
       ;; it's a table
       (mapcar (lambda (row)
                 (split-string row ";"))
-              (butlast (split-string split-result "\n") 1)))
+              (split-string split-result "\n" t)))
      (t split-result))))
 
-(defun ob-q-read-atom (q-atom)
-  "Convert a Q-ATOM string to elisp atom."
+(defun ob-q-read-atom (q-atom type)
+  "Convert a Q-ATOM string of TYPE to a elisp atom."
   (message (format "processing %s" q-atom))
   (let ((q-atom (org-trim q-atom)))
-   (cond ((string-match "`[a-zA-Z0-9\\._]*" q-atom)
-         (make-symbol (substring (match-string 0 q-atom) 1)))
-        ((string-match "\"\\([^\"]\\|.\\)*\""  q-atom)
-         (substring (replace-regexp-in-string "\\\\n" "\n" (match-string 0 q-atom)) 1 -1))
-        (t q-atom))))
+   (pcase type
+     ; -11 for symbol
+     (-11 (make-symbol (substring q-atom 1)))
+     ; 10 for string
+     (10 (substring (replace-regexp-in-string "\\\\n" "\n" q-atom) 1 -1))
+     ; -4 for byte
+     (-4 (string-to-number (substring q-atom 2) 16))
+     ; all the other numbers
+     ((pred (<= -9)) (string-to-number q-atom))
+     ; TODO handling date time
+     (_ q-atom))))
 
 (defun ob-q-var-to-q (var)
   "Convert an elisp VAR into a string of q source code."
@@ -214,13 +222,18 @@ Return the initialized session."
   (unless (string= session "none")
     (if (get-buffer-process (get-buffer session))
         (get-buffer session)
-      (let ((buffer (prog2 (q)
-                        (get-buffer q-active-buffer)
-                      (setq q-active-buffer nil))))
-        (when buffer
-          (with-current-buffer buffer
-            (rename-buffer session)
-            (current-buffer)))))))
+      (prog2 (when (get-buffer session) (kill-buffer session))
+          (let ((buffer (prog2 (q)
+                            (get-buffer q-active-buffer)
+                          (setq q-active-buffer nil))))
+            (when buffer
+              (with-current-buffer buffer
+                (rename-buffer session)
+                (current-buffer))))))))
+
+
+;;;###autoload
+(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
