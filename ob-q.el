@@ -44,9 +44,9 @@
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
 
-(defvar ob-q-soe-indicator "1 \"org_babel_q_eoe\";"
+(defvar ob-q-soe-indicator "1 \"org_babel_q_soe\";"
   "String to indicate start of evaluation output.")
-(defvar ob-q-soe-output "org_babel_q_eoe"
+(defvar ob-q-soe-output "org_babel_q_soe"
   "String to indicate start of evaluation output.")
 (defvar ob-q-eoe-indicator "1 \"org_babel_q_eoe\\n\";"
   "String to indicate that evaluation has completed.")
@@ -108,7 +108,6 @@ This function is called by `org-babel-execute-src-block'"
                 raw-output
                 (+ (length ob-q-soe-output) ;; define a string for start of value
                    (string-match-p ob-q-soe-output raw-output)))))
-          (message (format "raw-value is %s" raw-value))
           (if (or (member "verbatim" (cdr (assoc :result-params processed-params)))
                (not isvalue))
               raw-value
