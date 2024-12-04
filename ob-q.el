@@ -44,7 +44,7 @@
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
 
-(defvar ob-q-soe-indicator "1 \"org_babel_q_soe\";"
+(defvar ob-q-soe-indicator "1 \"org_babel_q_soe\";\n "
   "String to indicate start of evaluation output.")
 (defvar ob-q-soe-output "org_babel_q_soe"
   "String to indicate start of evaluation output.")
@@ -120,7 +120,7 @@ This function is called by `org-babel-execute-src-block'"
   (let* ((delim (string-match-p ";" result))
          (type (string-to-number (substring result 0 delim)))
          (split-result (substring result (+ delim 1))))
-    (message (format "split-result is %s" split-result))
+    ;(message (format "split-result is %s" split-result))
     (cond
      ((or (< type 0) (= type 10)) (ob-q-read-atom split-result type))
      ((= type 0) (split-string split-result ";"))
@@ -137,7 +137,7 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-read-atom (q-atom type)
   "Convert a Q-ATOM string of TYPE to a elisp atom."
-  (message (format "processing %s" q-atom))
+  ;(message (format "processing %s" q-atom))
   (let ((q-atom (org-trim q-atom)))
    (pcase type
      ; -11 for symbol
@@ -191,14 +191,15 @@ This function is called by `org-babel-execute-src-block'"
   "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
   (when (eql 'value (cdr (assoc :result-type processed-params)))
     (concat
-     "{[result]"
+     "{[result]\n "
      ob-q-soe-indicator
      (if (member "verbatim" (cdr (assoc :result-params processed-params)))
          ;; when in verbatim use q string maker
-         "1 .Q.s result;"
+         "1 .Q.s result;\n "
        ;; or else try to make something parsable
-       (concat
-        "rtype:type result;"
+       (mapconcat
+        #'identity
+        '("rtype:type result;"
         "1 string rtype;"
         "1 \";\";"
         "1 $["
@@ -212,7 +213,8 @@ This function is called by `org-babel-execute-src-block'"
         "\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
         ".Q.s result"
         "];"
-        "1 \"\\n\";"))
+        "1 \"\\n\";\n ")
+        "\n "))
      "}")))
 
 (defun ob-q-initiate-session (&optional session)
@@ -232,7 +234,7 @@ Return the initialized session."
 
 
 ;;;###autoload
-(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
+;(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
