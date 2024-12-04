@@ -78,7 +78,6 @@ To be implemented, currently just returns BODY"
 This function is called by `org-babel-execute-src-block'"
   (require 'ob-q)
   (let* ((processed-params (org-babel-process-params params))
-         ;; set the session if the value of the session keyword
          (full-body (org-babel-expand-body:q body params processed-params))
          (session-name (cdr (assoc :session processed-params)))
          (isvalue (eql 'value (cdr (assoc :result-type processed-params))))
