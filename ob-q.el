@@ -56,7 +56,10 @@
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
 To be implemented, currently just returns BODY"
-  (let* ((vars (org-babel--get-vars processed-params))
+  (let* ((body (concat (cdr (assoc :prologue processed-params)) "\n"
+                       body "\n"
+                       (cdr (assoc :epilogue processed-params))))
+         (vars (org-babel--get-vars processed-params))
          (result-type (cdr (assoc :result-type processed-params)))
          (type-processed-body
           (if (eql result-type 'value)
@@ -127,9 +130,11 @@ This function is called by `org-babel-execute-src-block'"
                 (ob-q-read-atom q-atom (- type))) (split-string split-result ";")))
      ((<= 98 type 99)
       ;; it's a table
-      (mapcar (lambda (row)
-                (split-string row ";"))
-              (split-string split-result "\n" t)))
+      (let ((table
+             (mapcar (lambda (row)
+                       (split-string row ";"))
+                     (split-string split-result "\n" t))))
+        (append (list (car table)) '(hline) (cdr table))))
      (t split-result))))
 
 (defun ob-q-read-atom (q-atom type)
@@ -206,7 +211,7 @@ This function is called by `org-babel-execute-src-block'"
         ".Q.qt result;"
         "\"\\n\" sv \";\" 0: result;"
         "rtype=99h;"
-        "\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
+        "\"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
         ".Q.s result"
         "];"
         "1 \"\\n\";\n ")
