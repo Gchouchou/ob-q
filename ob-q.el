@@ -99,13 +99,11 @@ This function is called by `org-babel-execute-src-block'"
                "\n"))))); bug with new line, and also bug when initializing session
     (message (format "raw output is %s" raw-output))
     (if isvalue
-        (let ((raw-value
-               (substring
-                raw-output
-                (+ (length ob-q-soe-output) ;; define a string for start of value
-                   (string-match-p ob-q-soe-output raw-output)))))
-          (if (or (member "verbatim" (cdr (assoc :result-params processed-params)))
-               (not isvalue))
+        (let ((raw-value (substring
+                          raw-output
+                          (+ (length ob-q-soe-output) ;; define a string for start of value
+                             (string-match-p ob-q-soe-output raw-output)))))
+          (if (member "verbatim" (cdr (assoc :result-params processed-params)))
               raw-value
             (ob-q-post-process-result raw-value)))
       raw-output)))
@@ -221,6 +219,7 @@ Return the initialized session."
   (unless (string= session "none")
     (if (get-buffer-process (get-buffer session))
         (get-buffer session)
+      ;; TODO use or instead of what we're doing here
       (prog2 (when (get-buffer session) (kill-buffer session))
           ;; TODO clean q-mode dependency
           (let ((buffer (prog2 (q)
