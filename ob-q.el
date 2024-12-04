@@ -73,8 +73,6 @@ To be implemented, currently just returns BODY"
     (message (format "expanded body %s" type-processed-body))
       type-processed-body))
 
-;; example params
-;;((:var data . -1) (:var i . dddeaf) (:colname-names) (:rowname-names) (:result-params replace) (:result-type . value) (:results . replace) (:exports . code) (:session . none) (:cache . no) (:noweb . no) (:hlines . no) (:tangle . no))
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
@@ -196,7 +194,6 @@ This function is called by `org-babel-execute-src-block'"
      (if (member "verbatim" (cdr (assoc :result-params processed-params)))
          ;; when in verbatim use q string maker
          "1 .Q.s result;\n "
-       ;; or else try to make something parsable
        (mapconcat
         #'identity
         '("rtype:type result;"
