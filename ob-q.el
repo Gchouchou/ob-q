@@ -29,7 +29,6 @@
 ;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
 
 ;;; Requirements:
-;;; for session support, q-mode is needed
 ;;; Package-Requires: ((emacs "27.1"))
 
 ;;; Code:
@@ -38,8 +37,7 @@
 (require 'ob)
 (require 'ob-eval)
 (require 'ob-comint)
-;; (require 'org-macs)
-(require 'q-mode) ;; Require q-mode for interactive support
+(require 'q-mode) ;; TODO Remove dependency
 
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
@@ -56,22 +54,20 @@
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
 To be implemented, currently just returns BODY"
-  (let* ((body (concat (cdr (assoc :prologue processed-params)) "\n"
-                       body "\n"
-                       (cdr (assoc :epilogue processed-params))))
+  (let* ((body (ob-q-strip (concat (cdr (assoc :prologue processed-params)) "\n"
+                                body "\n"
+                                (cdr (assoc :epilogue processed-params)))))
          (vars (org-babel--get-vars processed-params))
          (result-type (cdr (assoc :result-type processed-params)))
          (type-processed-body
           (if (eql result-type 'value)
-              (concat
-               (ob-q-preprocess-fun processed-params)
-               ;; only function wrap the stripped body
-               (ob-q-fun-wrapper (q-strip body) vars))
+              (concat (ob-q-preprocess-fun processed-params)
+               (ob-q-fun-wrapper body vars))
             (concat (mapconcat
                      (lambda (pair)
                        (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
                      vars)
-                    (q-strip body)))))
+                    body))))
     ;; TODO maybe use trap to not enter debugger for no reason
     (message (format "expanded body %s" type-processed-body))
       type-processed-body))
@@ -97,7 +93,7 @@ This function is called by `org-babel-execute-src-block'"
                (butlast
                 (org-babel-comint-with-output
                    (session ob-q-eoe-output)
-                 (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
+                 (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
                  (comint-send-input nil t))
                 1)
                "\n"))))); bug with new line, and also bug when initializing session
@@ -127,7 +123,8 @@ This function is called by `org-babel-execute-src-block'"
      ((<= 1 type 20)
       ;; it's a list
       (mapcar (lambda (q-atom)
-                (ob-q-read-atom q-atom (- type))) (split-string split-result ";")))
+                (ob-q-read-atom q-atom (- type)))
+              (split-string split-result ";")))
      ((<= 98 type 99)
       ;; it's a table
       (let ((table
@@ -225,6 +222,7 @@ Return the initialized session."
     (if (get-buffer-process (get-buffer session))
         (get-buffer session)
       (prog2 (when (get-buffer session) (kill-buffer session))
+          ;; TODO clean q-mode dependency
           (let ((buffer (prog2 (q)
                             (get-buffer q-active-buffer)
                           (setq q-active-buffer nil))))
@@ -233,6 +231,14 @@ Return the initialized session."
                 (rename-buffer session)
                 (current-buffer))))))))
 
+;;; Taken from github psaris/q-mode, decoupling the package for lack of official q version
+(defun ob-q-strip (text)
+  "Strip TEXT of all trailing comments, newlines and excessive whitespace."
+  (let* ((text (replace-regexp-in-string "^\\(?:[^\\\\].*\\)?[ \t]\\(/.*\\)\n" "" text t t 1)) ; / comments
+         (text (replace-regexp-in-string "^/.+$" "" text t t)) ; / comments
+         (text (replace-regexp-in-string "[ \t\n]+$" "" text t t)) ; excess white space
+         (text (replace-regexp-in-string "\n[ \t]+" "" text t t))) ; fold functions
+    text))
 
 ;;;###autoload
 ;(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
