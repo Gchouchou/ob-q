@@ -37,7 +37,7 @@
 (require 'ob)
 (require 'ob-eval)
 (require 'ob-comint)
-(require 'q-mode) ;; TODO Remove dependency
+(require 'q-mode "q-mode" t) ; not required but should be loaded
 
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
@@ -51,18 +51,23 @@
 (defvar ob-q-eoe-output "org_babel_q_eoe"
   "String to indicate that evaluation has completed.")
 
+(defcustom ob-q-program "q"
+  "Program name for invoking an inferior q."
+  :type 'file
+  :group 'ob-q)
+
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
 To be implemented, currently just returns BODY"
   (let* ((body (ob-q-strip (concat (cdr (assoc :prologue processed-params)) "\n"
-                                body "\n"
-                                (cdr (assoc :epilogue processed-params)))))
+                                   body "\n"
+                                   (cdr (assoc :epilogue processed-params)))))
          (vars (org-babel--get-vars processed-params))
          (result-type (cdr (assoc :result-type processed-params)))
          (type-processed-body
           (if (eql result-type 'value)
               (concat (ob-q-preprocess-fun processed-params)
-               (ob-q-fun-wrapper body vars))
+                      (ob-q-fun-wrapper body vars))
             (concat (mapconcat
                      (lambda (pair)
                        (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
@@ -70,7 +75,7 @@ To be implemented, currently just returns BODY"
                     body))))
     ;; TODO maybe use trap to not enter debugger for no reason
     (message (format "expanded body %s" type-processed-body))
-      type-processed-body))
+    type-processed-body))
 
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
@@ -92,9 +97,9 @@ This function is called by `org-babel-execute-src-block'"
                #'org-trim
                (butlast
                 (org-babel-comint-with-output
-                   (session ob-q-eoe-output)
-                 (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
-                 (comint-send-input nil t))
+                    (session ob-q-eoe-output)
+                  (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
+                  (comint-send-input nil t))
                 1)
                "\n"))))); bug with new line, and also bug when initializing session
     (message (format "raw output is %s" raw-output))
@@ -114,7 +119,6 @@ This function is called by `org-babel-execute-src-block'"
   (let* ((delim (string-match-p ";" result))
          (type (string-to-number (substring result 0 delim)))
          (split-result (substring result (+ delim 1))))
-    ;(message (format "split-result is %s" split-result))
     (cond
      ((or (< type 0) (= type 10)) (ob-q-read-atom split-result type))
      ((= type 0) (split-string split-result ";"))
@@ -134,19 +138,18 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-read-atom (q-atom type)
   "Convert a Q-ATOM string of TYPE to a elisp atom."
-  ;(message (format "processing %s" q-atom))
   (let ((q-atom (org-trim q-atom)))
-   (pcase type
-     ; -11 for symbol
-     (-11 (make-symbol (substring q-atom 1)))
-     ; 10 for string
-     (10 (substring (replace-regexp-in-string "\\\\n" "\n" q-atom) 1 -1))
-     ; -4 for byte
-     (-4 (string-to-number (substring q-atom 2) 16))
-     ; all the other numbers
-     ((pred (<= -9)) (string-to-number q-atom))
-     ; TODO handling date time
-     (_ q-atom))))
+    (pcase type
+      ;; -11 for symbol
+      (-11 (make-symbol (substring q-atom 1)))
+      ;; 10 for string
+      (10 (substring (replace-regexp-in-string "\\\\n" "\n" q-atom) 1 -1))
+      ;; -4 for byte
+      (-4 (string-to-number (substring q-atom 2) 16))
+      ;; all the other numbers
+      ((pred (<= -9)) (string-to-number q-atom))
+      ;; TODO handling date time
+      (_ q-atom))))
 
 (defun ob-q-var-to-q (var)
   "Convert an elisp VAR into a string of q source code."
@@ -181,7 +184,7 @@ This function is called by `org-babel-execute-src-block'"
             (mapconcat
              (lambda (pair)
                (ob-q-var-to-q (cdr pair)))
-              vars ";"))
+             vars ";"))
           "]"))
 
 (defun ob-q-preprocess-fun (processed-params)
@@ -196,20 +199,18 @@ This function is called by `org-babel-execute-src-block'"
        (mapconcat
         #'identity
         '("rtype:type result;"
-        "1 string rtype;"
-        "1 \";\";"
-        "1 $["
-        "rtype=10h;.Q.s result;"
-        ;; lists can be sv'ed
-        "rtype within (0;20);\";\" sv .Q.s each result;"
-        ;; how to parse a table?
-        ".Q.qt result;"
-        "\"\\n\" sv \";\" 0: result;"
-        "rtype=99h;"
-        "\"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
-        ".Q.s result"
-        "];"
-        "1 \"\\n\";\n ")
+          "1 string rtype;"
+          "1 \";\";"
+          "1 $["
+          "rtype=10h;.Q.s result;"
+          "rtype within (0;20);\";\" sv .Q.s each result;"
+          ".Q.qt result;"
+          "\"\\n\" sv \";\" 0: result;"
+          "rtype=99h;"
+          "\"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
+          ".Q.s result"
+          "];"
+          "1 \"\\n\";\n ")
         "\n "))
      "}")))
 
@@ -217,20 +218,27 @@ This function is called by `org-babel-execute-src-block'"
   "If there is not a current inferior-process-buffer in SESSION then create.
 Return the initialized session."
   (unless (string= session "none")
-    (if (get-buffer-process (get-buffer session))
-        (get-buffer session)
-      ;; TODO use or instead of what we're doing here
-      (prog2 (when (get-buffer session) (kill-buffer session))
-          ;; TODO clean q-mode dependency
-          (let ((buffer (prog2 (q)
-                            (get-buffer q-active-buffer)
-                          (setq q-active-buffer nil))))
-            (when buffer
-              (with-current-buffer buffer
-                (rename-buffer session)
-                (current-buffer))))))))
+    (let* ((session (or session "*org-babel-q*"))
+           (buffer (get-buffer-create session)))
+      (if (not (comint-check-proc buffer))
+          (if (not (require 'q-mode "q-mode" t))                         ; check if q-mode is loaded
+              (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
+                     (buffer2 (process-buffer process)))
+                (kill-buffer buffer)
+                (with-current-buffer buffer2
+                  (rename-buffer session)))                        ; massage the buffer into submission
+            (with-current-buffer buffer
+              (progn (message "Starting q with: \"%s\"" ob-q-program)
+                     (comint-mode)
+                     (comint-exec buffer
+                                  "ob-q"
+                                  ob-q-program
+                                  nil
+                                  nil)
+                     (setq-local comint-prompt-regexp "^q)+")))))
+      buffer)))
 
-;;; Taken from github psaris/q-mode, decoupling the package for lack of official q version
+;;; Taken from github psaris/q-mode, decoupling the package
 (defun ob-q-strip (text)
   "Strip TEXT of all trailing comments, newlines and excessive whitespace."
   (let* ((text (replace-regexp-in-string "^\\(?:[^\\\\].*\\)?[ \t]\\(/.*\\)\n" "" text t t 1)) ; / comments
@@ -240,7 +248,7 @@ Return the initialized session."
     text))
 
 ;;;###autoload
-;(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
+;;;(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
