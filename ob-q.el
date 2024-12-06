@@ -226,15 +226,11 @@ Return the initialized session."
                      (buffer2 (process-buffer process)))
                 (kill-buffer buffer)
                 (with-current-buffer buffer2
-                  (rename-buffer session)))                        ; massage the buffer into submission
+                  (rename-buffer session)))                        ; massage the buffer name
             (with-current-buffer buffer
               (progn (message "Starting q with: \"%s\"" ob-q-program)
                      (comint-mode)
-                     (comint-exec buffer
-                                  "ob-q"
-                                  ob-q-program
-                                  nil
-                                  nil)
+                     (comint-exec buffer "ob-q" ob-q-program nil nil)
                      (setq-local comint-prompt-regexp "^q)+")))))
       buffer)))
 
