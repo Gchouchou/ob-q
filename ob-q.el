@@ -196,22 +196,20 @@ This function is called by `org-babel-execute-src-block'"
    ob-q-soe-indicator "\n "
    (if (member "verbatim" (cdr (assoc :result-params processed-params)))
        "1 .Q.s result;" ; when in verbatim use q string maker
-     (mapconcat
-      #'identity
-      '("rtype:type result;"
-        "1 string rtype;"
-        "1 \";\";"
-        "1 $["
-        "rtype=10h;.Q.s result;"
-        "rtype within (0;20);\";\" sv .Q.s each result;"
-        ".Q.qt result;"
-        "\"\\n\" sv \";\" 0: result;"
-        "rtype=99h;"
-        "\"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
-        ".Q.s result"
-        "];"
-        "1 \"\\n\";")
-      "\n "))
+        "\
+rtype:type result;
+ 1 string rtype;
+ 1 \";\";
+ 1 $[
+ rtype=10h;.Q.s result;
+ rtype within (0;20);\";\" sv .Q.s each result;
+ .Q.qt result;
+ \"\\n\" sv \";\" 0: result;
+ rtype=99h;
+ \"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;
+ .Q.s result
+ ];
+ 1 \"\\n\";")
    "}"))
 
 (defun ob-q-initiate-session (&optional session)
