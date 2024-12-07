@@ -43,13 +43,13 @@
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
 
-(defvar ob-q-soe-indicator "1 \"org_babel_q_soe\";"
+(defconst ob-q-soe-indicator "1 \"org_babel_q_soe\";"
   "String to indicate start of evaluation output.")
-(defvar ob-q-soe-output "org_babel_q_soe"
+(defconst ob-q-soe-output "org_babel_q_soe"
   "String to indicate start of evaluation output.")
-(defvar ob-q-eoe-indicator "1 \"org_babel_q_eoe\\n\";"
+(defconst ob-q-eoe-indicator "1 \"org_babel_q_eoe\\n\";"
   "String to indicate that evaluation has completed.")
-(defvar ob-q-eoe-output "org_babel_q_eoe"
+(defconst ob-q-eoe-output "org_babel_q_eoe"
   "String to indicate that evaluation has completed.")
 
 (defcustom ob-q-program "q"
