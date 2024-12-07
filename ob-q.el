@@ -102,15 +102,15 @@ This function is called by `org-babel-execute-src-block'"
                   (comint-send-input nil t))
                 1)
                "\n")))))
-    (if (eql 'value (cdr (assoc :result-type processed-params)))
-        (let ((raw-value (substring
+    (pcase (cdr (assoc :result-type processed-params))
+        ('value (let ((raw-value (substring
                           raw-output
                           (+ (length ob-q-soe-output)
                              (string-match-p ob-q-soe-output raw-output)))))
           (if (member "verbatim" (cdr (assoc :result-params processed-params)))
               raw-value
-            (ob-q-post-process-result raw-value)))
-      raw-output)))
+            (ob-q-post-process-result raw-value))))
+      ('output raw-output))))
 
 (defun ob-q-post-process-result (result)
   "Convert the RESULT to elisp."
@@ -226,7 +226,7 @@ Return the initialized session."
        ((comint-check-proc buffer) buffer)                   ; already a q process
        ((featurep 'q-mode)                                   ; check if q-mode is loaded
         (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
-               (buffer2 (process-buffer process)))
+               (buffer2 (get-buffer q-active-buffer)))
           (kill-buffer buffer)
           (with-current-buffer buffer2
             (rename-buffer session)                          ; massage the buffer name
