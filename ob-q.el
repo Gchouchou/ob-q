@@ -79,8 +79,7 @@
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
-  (unless (featurep 'ob-q)
-    (require 'ob-q))
+  (unless (featurep 'ob-q) (require 'ob-q))
   (let* ((processed-params (org-babel-process-params params))
          (full-body (org-babel-expand-body:q body params processed-params))
          (session-name (cdr (assoc :session processed-params)))
