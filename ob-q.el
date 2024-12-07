@@ -89,22 +89,22 @@ This function is called by `org-babel-execute-src-block'"
     (if async
         nil
       (let ((raw-output
-             (pcase session-name
-               ("none" (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                              (cmd (format "%s %s"
-                                           (if (featurep 'q-mode) q-program ob-q-program)
-                                           (org-babel-process-file-name tmp-src-file))))
-                         (with-temp-file tmp-src-file (insert full-body))
-                         (org-babel-eval cmd "")))
-               (_ (mapconcat
-                   #'org-trim
-                   (butlast
-                    (org-babel-comint-with-output
-                        (session ob-q-eoe-output)
-                      (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
-                      (comint-send-input nil t))
-                    1)
-                   "\n")))))
+             (if session
+                 (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
+                        (cmd (format "%s %s"
+                                     (if (featurep 'q-mode) q-program ob-q-program)
+                                     (org-babel-process-file-name tmp-src-file))))
+                   (with-temp-file tmp-src-file (insert full-body))
+                   (org-babel-eval cmd ""))
+               (mapconcat
+                #'org-trim
+                (butlast
+                 (org-babel-comint-with-output
+                     (session ob-q-eoe-output)
+                   (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
+                   (comint-send-input nil t))
+                 1)
+                "\n"))))
         (pcase result-type
           ('value (let ((raw-value (substring
                                     raw-output
