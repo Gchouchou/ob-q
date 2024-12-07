@@ -83,7 +83,6 @@ This function is called by `org-babel-execute-src-block'"
   (let* ((processed-params (org-babel-process-params params))
          (full-body (org-babel-expand-body:q body params processed-params))
          (session-name (cdr (assoc :session processed-params)))
-         (isvalue (eql 'value (cdr (assoc :result-type processed-params))))
          (raw-output
           (if (string= session-name "none")
               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
@@ -103,7 +102,7 @@ This function is called by `org-babel-execute-src-block'"
                   (comint-send-input nil t))
                 1)
                "\n")))))
-    (if isvalue
+    (if (eql 'value (cdr (assoc :result-type processed-params)))
         (let ((raw-value (substring
                           raw-output
                           (+ (length ob-q-soe-output)
