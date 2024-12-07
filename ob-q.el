@@ -103,13 +103,13 @@ This function is called by `org-babel-execute-src-block'"
                 1)
                "\n")))))
     (pcase (cdr (assoc :result-type processed-params))
-        ('value (let ((raw-value (substring
-                          raw-output
-                          (+ (length ob-q-soe-output)
-                             (string-match-p ob-q-soe-output raw-output)))))
-          (if (member "verbatim" (cdr (assoc :result-params processed-params)))
-              raw-value
-            (ob-q-post-process-result raw-value))))
+      ('value (let ((raw-value (substring
+                                raw-output
+                                (+ (length ob-q-soe-output)
+                                   (string-match-p ob-q-soe-output raw-output)))))
+                (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+                    raw-value
+                  (ob-q-post-process-result raw-value))))
       ('output raw-output))))
 
 (defun ob-q-post-process-result (result)
