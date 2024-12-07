@@ -117,7 +117,7 @@ This function is called by `org-babel-execute-src-block'"
       raw-output)))
 
 (defun ob-q-post-process-result (result)
-  "Convert the RESULT to elisp list."
+  "Convert the RESULT to elisp."
   (message (format "pre-proccessed-result is %s" result))
   (let* ((delim (string-match-p ";" result))
          (type (string-to-number (substring result 0 delim)))
