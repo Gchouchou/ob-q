@@ -66,14 +66,14 @@
          (vars (org-babel--get-vars processed-params))
          (result-type (cdr (assoc :result-type processed-params)))
          (type-processed-body
-          (if (eql result-type 'value)
-              (concat (ob-q-preprocess-fun processed-params)
-                      (ob-q-fun-wrapper body vars))
-            (concat (mapconcat
-                     (lambda (pair)
-                       (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
-                     vars)
-                    body))))
+          (pcase result-type
+            ('value (concat (ob-q-preprocess-fun processed-params)
+                            (ob-q-fun-wrapper body vars)))
+            ('output (concat (mapconcat
+                              (lambda (pair)
+                                (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
+                              vars)
+                             body)))))
     type-processed-body))
 
 (defun org-babel-execute:q (body params)
@@ -192,29 +192,28 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-preprocess-fun (processed-params)
   "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
-  (when (eql 'value (cdr (assoc :result-type processed-params)))
-    (concat
-     "{[result]\n "
-     ob-q-soe-indicator "\n "
-     (if (member "verbatim" (cdr (assoc :result-params processed-params)))
-         "1 .Q.s result;" ; when in verbatim use q string maker
-       (mapconcat
-        #'identity
-        '("rtype:type result;"
-          "1 string rtype;"
-          "1 \";\";"
-          "1 $["
-          "rtype=10h;.Q.s result;"
-          "rtype within (0;20);\";\" sv .Q.s each result;"
-          ".Q.qt result;"
-          "\"\\n\" sv \";\" 0: result;"
-          "rtype=99h;"
-          "\"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
-          ".Q.s result"
-          "];"
-          "1 \"\\n\";")
-        "\n "))
-     "}")))
+  (concat
+   "{[result]\n "
+   ob-q-soe-indicator "\n "
+   (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+       "1 .Q.s result;" ; when in verbatim use q string maker
+     (mapconcat
+      #'identity
+      '("rtype:type result;"
+        "1 string rtype;"
+        "1 \";\";"
+        "1 $["
+        "rtype=10h;.Q.s result;"
+        "rtype within (0;20);\";\" sv .Q.s each result;"
+        ".Q.qt result;"
+        "\"\\n\" sv \";\" 0: result;"
+        "rtype=99h;"
+        "\"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
+        ".Q.s result"
+        "];"
+        "1 \"\\n\";")
+      "\n "))
+   "}"))
 
 (defun ob-q-initiate-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
