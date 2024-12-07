@@ -148,7 +148,6 @@ This function is called by `org-babel-execute-src-block'"
       (-4 (string-to-number (substring q-atom 2) 16))
       ;; all the other numbers
       ((pred (<= -9)) (string-to-number q-atom))
-      ;; TODO handling date time
       (_ q-atom))))
 
 (defun ob-q-var-to-q (var)
@@ -162,8 +161,19 @@ This function is called by `org-babel-execute-src-block'"
      (mapconcat #'ob-q-var-to-q var ";") ; do it recursively
      ")"))
    ((symbolp var) (format "`%S" var))
+   ;; Match a datetime string
+   ((and (stringp var)
+         (or (string-match-p
+              "^\\([0-9]\\{4\\}\\)\\.[0-1][0-9]\\.[0-3][0-9]\\(D\\([0-2][0-9]\\(:\\([0-5][0-9]\\(:[0-5][0-9]\\(\\.[0-9]*\\)?\\)?\\)?\\)?\\)?\\)?$"
+              var)
+             (string-match-p
+              "[0-2][0-9]:\\([0-5][0-9]\\(:\\([0-5][0-9]\\(\\.[0-9]*\\)?\\)?\\)?\\)?"
+              var)
+             (string-match-p
+              "\\([0-9]+\\)D\\([0-2][0-9]:\\([0-5][0-9]\\(:\\([0-5][0-9]\\(\\.[0-9]*\\)?\\)?\\)?\\)?\\)?"
+              var)))
+    (format "%s" var))
    (t (format "%S" var))))
-;; TODO handle date time formats...
 ;; TODO emacs table
 
 (defun ob-q-fun-wrapper (body &optional vars)
