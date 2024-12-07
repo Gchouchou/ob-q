@@ -214,19 +214,21 @@ Return the initialized session."
   (unless (string= session "none")
     (let* ((session (or session "*org-babel-q*"))
            (buffer (get-buffer-create session)))
-      (unless (get-buffer-process buffer)
-        (if (require 'q-mode "q-mode" t)                         ; check if q-mode is loaded
-            (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
-                   (buffer2 (process-buffer process)))
-              (kill-buffer buffer)
-              (with-current-buffer buffer2
-                (rename-buffer session)))                        ; massage the buffer name
-          (with-current-buffer buffer
-            (progn (message "Starting q with: \"%s\"" ob-q-program)
-                   (comint-mode)
-                   (comint-exec buffer "ob-q" ob-q-program nil nil)
-                   (setq-local comint-prompt-regexp "^q)+")))))
-      buffer)))
+      (cond
+       ((comint-check-proc buffer) buffer)                   ; already a q process
+       ((require 'q-mode "q-mode" t)                         ; check if q-mode is loaded
+        (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
+               (buffer2 (process-buffer process)))
+          (kill-buffer buffer)
+          (with-current-buffer buffer2
+            (rename-buffer session)                          ; massage the buffer name
+            (current-buffer))))
+       (t (with-current-buffer buffer                        ; barebones q-session
+            (message "Starting q with: \"%s\"" ob-q-program)
+            (comint-mode)
+            (comint-exec buffer "ob-q" ob-q-program nil nil)
+            (setq-local comint-prompt-regexp "^q)+")
+            (current-buffer)))))))
 
 ;;; Taken from github psaris/q-mode, decoupling the package
 (defun ob-q-strip (text)
