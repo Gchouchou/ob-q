@@ -75,7 +75,6 @@
                      vars)
                     body))))
     ;; TODO maybe use trap to not enter debugger for no reason
-    (message (format "expanded body %s" type-processed-body))
     type-processed-body))
 
 (defun org-babel-execute:q (body params)
@@ -104,7 +103,6 @@ This function is called by `org-babel-execute-src-block'"
                   (comint-send-input nil t))
                 1)
                "\n"))))); bug with new line, and also bug when initializing session
-    (message (format "raw output is %s" raw-output))
     (if isvalue
         (let ((raw-value (substring
                           raw-output
@@ -117,7 +115,6 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-post-process-result (result)
   "Convert the RESULT to elisp."
-  (message (format "pre-proccessed-result is %s" result))
   (let* ((delim (string-match-p ";" result))
          (type (string-to-number (substring result 0 delim)))
          (split-result (substring result (+ delim 1))))
