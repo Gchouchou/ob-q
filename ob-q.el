@@ -88,7 +88,8 @@ This function is called by `org-babel-execute-src-block'"
          (raw-output
           (if (string= session-name "none")
               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                     (cmd (format "%s %s" (if (require 'q-mode "q-mode" t) q-program "q")
+                     (cmd (format "%s %s"
+                                  (if (require 'q-mode "q-mode" t) q-program ob-q-program)
                                   (org-babel-process-file-name tmp-src-file))))
                 (with-temp-file tmp-src-file (insert full-body))
                 (org-babel-eval cmd ""))
@@ -102,11 +103,11 @@ This function is called by `org-babel-execute-src-block'"
                   (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
                   (comint-send-input nil t))
                 1)
-               "\n"))))); bug with new line, and also bug when initializing session
+               "\n")))))
     (if isvalue
         (let ((raw-value (substring
                           raw-output
-                          (+ (length ob-q-soe-output) ; define a string for start of value
+                          (+ (length ob-q-soe-output)
                              (string-match-p ob-q-soe-output raw-output)))))
           (if (member "verbatim" (cdr (assoc :result-params processed-params)))
               raw-value
