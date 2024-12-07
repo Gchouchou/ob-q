@@ -64,9 +64,8 @@
                                    body "\n"
                                    (cdr (assoc :epilogue processed-params)))))
          (vars (org-babel--get-vars processed-params))
-         (result-type (cdr (assoc :result-type processed-params)))
          (type-processed-body
-          (pcase result-type
+          (pcase (cdr (assoc :result-type processed-params))
             ('value (concat (ob-q-preprocess-fun processed-params)
                             (ob-q-fun-wrapper body vars)))
             ('output (concat (mapconcat
