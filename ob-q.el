@@ -221,7 +221,7 @@ Return the initialized session."
   (unless (string= session "none")
     (let* ((session (or session "*org-babel-q*"))
            (buffer (get-buffer-create session)))
-      (if (not (comint-check-proc buffer))
+      (if (not (get-buffer-process buffer))
           (if (require 'q-mode "q-mode" t)                         ; check if q-mode is loaded
               (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
                      (buffer2 (process-buffer process)))
