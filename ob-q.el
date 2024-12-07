@@ -43,7 +43,7 @@
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
 
-(defvar ob-q-soe-indicator "1 \"org_babel_q_soe\";\n "
+(defvar ob-q-soe-indicator "1 \"org_babel_q_soe\";"
   "String to indicate start of evaluation output.")
 (defvar ob-q-soe-output "org_babel_q_soe"
   "String to indicate start of evaluation output.")
@@ -196,10 +196,9 @@ This function is called by `org-babel-execute-src-block'"
   (when (eql 'value (cdr (assoc :result-type processed-params)))
     (concat
      "{[result]\n "
-     ob-q-soe-indicator
+     ob-q-soe-indicator "\n "
      (if (member "verbatim" (cdr (assoc :result-params processed-params)))
-         ;; when in verbatim use q string maker
-         "1 .Q.s result;\n "
+         "1 .Q.s result;" ; when in verbatim use q string maker
        (mapconcat
         #'identity
         '("rtype:type result;"
@@ -214,7 +213,7 @@ This function is called by `org-babel-execute-src-block'"
           "\"key;value\\n\",\"\\n\" sv {[d;k] (.Q.s1 k),\";\",.Q.s1 d[k] }[result;] each key result;"
           ".Q.s result"
           "];"
-          "1 \"\\n\";\n ")
+          "1 \"\\n\";")
         "\n "))
      "}")))
 
