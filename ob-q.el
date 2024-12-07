@@ -59,8 +59,7 @@
   :group 'ob-q)
 
 (defun org-babel-expand-body:q (body params &optional processed-params)
-  "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body.
-To be implemented, currently just returns BODY"
+  "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body."
   (let* ((body (ob-q-strip (concat (cdr (assoc :prologue processed-params)) "\n"
                                    body "\n"
                                    (cdr (assoc :epilogue processed-params)))))
@@ -236,9 +235,9 @@ Return the initialized session."
 (defun ob-q-strip (text)
   "Strip TEXT of all trailing comments, newlines and excessive whitespace."
   (let* ((text (replace-regexp-in-string "^\\(?:[^\\\\].*\\)?[ \t]\\(/.*\\)\n" "" text t t 1)) ; / comments
-         (text (replace-regexp-in-string "^/.+$" "" text t t)) ; / comments
-         (text (replace-regexp-in-string "[ \t\n]+$" "" text t t)) ; excess white space
-         (text (replace-regexp-in-string "\n[ \t]+" "" text t t))) ; fold functions
+         (text (replace-regexp-in-string "^/.+$" "" text t t))                                 ; / comments
+         (text (replace-regexp-in-string "[ \t\n]+$" "" text t t))                             ; excess white space
+         (text (replace-regexp-in-string "\n[ \t]+" "" text t t)))                             ; fold functions
     text))
 
 ;;;###autoload
