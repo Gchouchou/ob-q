@@ -1,11 +1,13 @@
 ;;; ob-q.el --- org-babel functions for q evaluation
 
-;; Copyright (C) your name here
+;; Copyright (C) Justin Yu <jusytinyu@gmail.com>
 
-;; Author: your name here
+;; Author: Justin Yu
 ;; Keywords: literate programming, reproducible research
-;; Homepage: https://orgmode.org
-;; Version: 0.02
+;; Created 7 Dec 2024
+;; Version: 0.1
+
+;; This file is not part of GNU Emacs.
 
 ;;; License:
 
