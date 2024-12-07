@@ -31,7 +31,7 @@
 ;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
 
 ;;; Requirements:
-;;; Package-Requires: ((emacs "26.1"))
+;;; Package-Requires: ((emacs "27.1"))
 
 ;;; Code:
 
@@ -152,10 +152,15 @@ This function is called by `org-babel-execute-src-block'"
   (cond
    ((null var) nil)
    ((or (vectorp var)
-        (listp var))
+        (proper-list-p var))
     (concat
      "("
      (mapconcat #'ob-q-var-to-q var ";") ; do it recursively
+     ")"))
+   ((listp var)
+    (concat
+     "("
+     (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";") ; do it recursively
      ")"))
    ((symbolp var) (format "`%S" var))
    ;; Match a datetime string
