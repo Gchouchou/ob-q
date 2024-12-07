@@ -2,20 +2,20 @@
 
 ## Features
 
-ob-q adds [[https://orgmode.org/worg/org-contrib/babel/][Org-Babel]] support for evaluating codeblocks
-written in [[https://code.kx.com/q/][q/kdb+]] in org files, a markup language from [[https://www.gnu.org/software/emacs/][Emacs]].
+ob-q adds [org-babel](https://orgmode.org/worg/org-contrib/babel/) support for evaluating codeblocks
+written in [q/kdb+](https://code.kx.com/q/) in org files, a markup language from [emacs](https://www.gnu.org/software/emacs/).
 
 Some features:
 - Session evaluation
 - Basic value extraction and passing
-- Integration with [[https://github.com/psaris/q-mode/tree/master][q-mode]]
+- Integration with [q-mode](https://github.com/psaris/q-mode/tree/master)
 
 ## Installation
 
 ``` emacs-lisp
 (require 'ob-q)
 ```
-[[https://github.com/psaris/q-mode/tree/master][q-mode]] is not necessary for this package although it is highly recommended to have it for syntax highlighting and editing .q files.
+[q-mode](https://github.com/psaris/q-mode/tree/master) is not necessary for this package although it is highly recommended to have it for syntax highlighting and editing .q files.
 
 
 ## Supported :var Header Arguments
