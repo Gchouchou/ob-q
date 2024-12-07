@@ -231,6 +231,7 @@ Return the initialized session."
           (kill-buffer buffer)
           (with-current-buffer buffer2
             (rename-buffer session)                          ; massage the buffer name
+            (setq q-active-buffer session)
             (current-buffer))))
        (t (with-current-buffer buffer                        ; barebones q-session
             (message "Starting q with: \"%s\"" ob-q-program)
