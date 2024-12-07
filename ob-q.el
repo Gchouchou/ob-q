@@ -31,7 +31,7 @@
 ;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
 
 ;;; Requirements:
-;;; Package-Requires: ((emacs "27.1"))
+;;; Package-Requires: ((emacs "28.1"))
 
 ;;; Code:
 
@@ -82,34 +82,38 @@ This function is called by `org-babel-execute-src-block'"
   (let* ((processed-params (org-babel-process-params params))
          (full-body (org-babel-expand-body:q body params processed-params))
          (session-name (cdr (assoc :session processed-params)))
-         (raw-output
-          (if (string= session-name "none")
-              (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                     (cmd (format "%s %s"
-                                  (if (featurep 'q-mode) q-program ob-q-program)
-                                  (org-babel-process-file-name tmp-src-file))))
-                (with-temp-file tmp-src-file (insert full-body))
-                (org-babel-eval cmd ""))
-            (let* ((session (unless (string= session-name "none")
-                              (ob-q-initiate-session session-name))))
-              (mapconcat
-               #'org-trim
-               (butlast
-                (org-babel-comint-with-output
-                    (session ob-q-eoe-output)
-                  (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
-                  (comint-send-input nil t))
-                1)
-               "\n")))))
-    (pcase (cdr (assoc :result-type processed-params))
-      ('value (let ((raw-value (substring
-                                raw-output
-                                (+ (length ob-q-soe-output)
-                                   (string-match-p ob-q-soe-output raw-output)))))
-                (if (member "verbatim" (cdr (assoc :result-params processed-params)))
-                    raw-value
-                  (ob-q-post-process-result raw-value))))
-      ('output raw-output))))
+         (session (unless (string= session-name "none")
+                    (ob-q-initiate-session session-name)))
+         (async (org-babel-comint-use-async params))
+         (result-type (cdr (assoc :result-type processed-params))))
+    (if async
+        nil
+      (let ((raw-output
+             (pcase session-name
+               ("none" (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
+                              (cmd (format "%s %s"
+                                           (if (featurep 'q-mode) q-program ob-q-program)
+                                           (org-babel-process-file-name tmp-src-file))))
+                         (with-temp-file tmp-src-file (insert full-body))
+                         (org-babel-eval cmd "")))
+               (_ (mapconcat
+                   #'org-trim
+                   (butlast
+                    (org-babel-comint-with-output
+                        (session ob-q-eoe-output)
+                      (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
+                      (comint-send-input nil t))
+                    1)
+                   "\n")))))
+        (pcase result-type
+          ('value (let ((raw-value (substring
+                                    raw-output
+                                    (+ (length ob-q-soe-output)
+                                       (string-match-p ob-q-soe-output raw-output)))))
+                    (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+                        raw-value
+                      (ob-q-post-process-result raw-value))))
+          ('output raw-output))))))
 
 (defun ob-q-post-process-result (result)
   "Convert the RESULT to elisp."
