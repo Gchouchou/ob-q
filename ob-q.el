@@ -39,7 +39,7 @@
 (require 'ob)
 (require 'ob-eval)
 (require 'ob-comint)
-(require 'q-mode "q-mode" t) ; not required but should be loaded
+(require 'q-mode "q-mode" t) ; not required but highly recommended
 
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
