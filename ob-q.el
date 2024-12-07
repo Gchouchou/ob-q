@@ -74,7 +74,6 @@
                        (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
                      vars)
                     body))))
-    ;; TODO maybe use trap to not enter debugger for no reason
     type-processed-body))
 
 (defun org-babel-execute:q (body params)
