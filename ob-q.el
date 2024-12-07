@@ -35,7 +35,6 @@
 
 ;;; Code:
 
-(require 'org)
 (require 'ob)
 (require 'ob-eval)
 (require 'ob-comint)
@@ -79,7 +78,8 @@
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
-  (require 'ob-q)
+  (unless (featurep 'ob-q)
+    (require 'ob-q))
   (let* ((processed-params (org-babel-process-params params))
          (full-body (org-babel-expand-body:q body params processed-params))
          (session-name (cdr (assoc :session processed-params)))
@@ -88,7 +88,7 @@ This function is called by `org-babel-execute-src-block'"
           (if (string= session-name "none")
               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
                      (cmd (format "%s %s"
-                                  (if (require 'q-mode "q-mode" t) q-program ob-q-program)
+                                  (if (featurep 'q-mode) q-program ob-q-program)
                                   (org-babel-process-file-name tmp-src-file))))
                 (with-temp-file tmp-src-file (insert full-body))
                 (org-babel-eval cmd ""))
@@ -226,7 +226,7 @@ Return the initialized session."
            (buffer (get-buffer-create session)))
       (cond
        ((comint-check-proc buffer) buffer)                   ; already a q process
-       ((require 'q-mode "q-mode" t)                         ; check if q-mode is loaded
+       ((featurep 'q-mode)                                   ; check if q-mode is loaded
         (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
                (buffer2 (process-buffer process)))
           (kill-buffer buffer)
