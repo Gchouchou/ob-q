@@ -167,7 +167,7 @@ This function is called by `org-babel-execute-src-block'"
    ((symbolp var) (format "`%S" var))
    (t (format "%S" var))))
 ;; TODO handle date time formats...
-;; TODO emacs table are still going to suck...
+;; TODO emacs table
 
 (defun ob-q-fun-wrapper (body &optional vars)
   "Wraps BODY in a q lambda with VARS as parameters."
