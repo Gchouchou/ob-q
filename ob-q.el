@@ -88,7 +88,8 @@ This function is called by `org-babel-execute-src-block'"
          (raw-output
           (if (string= session-name "none")
               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                     (cmd (format "q %s" (org-babel-process-file-name tmp-src-file))))
+                     (cmd (format "%s %s" (if (require 'q-mode "q-mode" t) q-program "q")
+                                  (org-babel-process-file-name tmp-src-file))))
                 (with-temp-file tmp-src-file (insert full-body))
                 (org-babel-eval cmd ""))
             (let* ((session (unless (string= session-name "none")
