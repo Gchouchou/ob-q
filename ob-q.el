@@ -83,7 +83,7 @@ This function is called by `org-babel-execute-src-block'"
          (full-body (org-babel-expand-body:q body params processed-params))
          (session-name (cdr (assoc :session processed-params)))
          (session (unless (string= session-name "none")
-                    (ob-q-initiate-session session-name)))
+                    (ob-q-initialize-session session-name)))
          (async (org-babel-comint-use-async params))
          (result-type (cdr (assoc :result-type processed-params))))
     (if async
@@ -221,9 +221,9 @@ rtype:type result;
  1 \"\\n\";")
    "}"))
 
-(defun ob-q-initiate-session (&optional session)
+(defun ob-q-initialize-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
-Return the initialized session."
+Returns the initialized session buffer."
   (unless (string= session "none")
     (let* ((session (or session "*org-babel-q*"))
            (buffer (get-buffer-create session)))
@@ -232,7 +232,7 @@ Return the initialized session."
        ((featurep 'q-mode)                                   ; check if q-mode is loaded
         (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
                (buffer2 (get-buffer q-active-buffer)))
-          (kill-buffer buffer)
+          (unless (eq buffer buffer2) (kill-buffer buffer))
           (with-current-buffer buffer2
             (rename-buffer session)                          ; massage the buffer name
             (setq q-active-buffer session)
