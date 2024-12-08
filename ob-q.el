@@ -209,7 +209,6 @@ This function is called by `org-babel-execute-src-block'"
               var)))
     (format "%s" var))
    (t (format "%S" var))))
-;; TODO emacs table
 
 (defun ob-q-fun-wrapper (body &optional vars)
   "Wraps BODY in a q lambda with VARS as parameters.
