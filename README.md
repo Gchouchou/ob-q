@@ -16,7 +16,6 @@ Some features:
 ``` emacs-lisp
 (require 'ob-q)
 ```
-[q-mode](https://github.com/psaris/q-mode/tree/master) is not necessary for this package although it is highly recommended to have it for syntax highlighting and editing .q files.
 
 # Headers
 

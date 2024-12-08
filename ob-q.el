@@ -31,14 +31,14 @@
 ;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
 
 ;;; Requirements:
-;;; Package-Requires: ((emacs "28.1"))
+;;; Package-Requires: ((emacs "28.1") (q-mode "20241129.100"))
 
 ;;; Code:
 
 (require 'ob)
 (require 'ob-eval)
 (require 'ob-comint)
-(require 'q-mode "q-mode" t) ; not required but highly recommended
+(require 'q-mode)
 
 (defvar org-babel-tangle-lang-exts)
 (add-to-list 'org-babel-tangle-lang-exts '("q" . "q"))
@@ -52,14 +52,9 @@
 (defconst ob-q-eoe-output "org_babel_q_eoe"
   "String to indicate that evaluation has completed.")
 
-(defcustom ob-q-program "q"
-  "Program name for invoking an inferior q."
-  :type 'file
-  :group 'ob-q)
-
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body."
-  (let* ((body (ob-q-strip (concat (when-let ((prologue (cdr (assoc :prologue processed-params))))
+  (let* ((body (q-strip (concat (when-let ((prologue (cdr (assoc :prologue processed-params))))
                                      (concat prologue "\n"))
                                    body "\n"
                                    (cdr (assoc :epilogue processed-params)))))
@@ -100,7 +95,7 @@ This function is called by `org-babel-execute-src-block'"
           (org-babel-comint-input-command
            session
            (concat (format "\"ob_comint_async_q_start_%s\"\n" uuid)
-                   (ob-q-strip full-body)
+                   (q-strip full-body)
                    (format "\n\"ob_comint_async_q_end_%s\"\n" uuid)))
           uuid)
       (let ((raw-output
@@ -110,13 +105,12 @@ This function is called by `org-babel-execute-src-block'"
                   (butlast
                    (org-babel-comint-with-output
                        (session ob-q-eoe-output)
-                     (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
+                     (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
                      (comint-send-input nil t))
                    1)
                   "\n")
                (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                      (cmd (format "%s %s"
-                                   (if (featurep 'q-mode) q-program ob-q-program)
+                      (cmd (format "%s %s" q-program
                                    (org-babel-process-file-name tmp-src-file))))
                  (with-temp-file tmp-src-file (insert full-body))
                  (org-babel-eval cmd "")))))
@@ -254,22 +248,7 @@ Returns the initialized session buffer."
           (with-current-buffer buffer2
             (rename-buffer session)                          ; massage the buffer name
             (setq q-active-buffer session)
-            (current-buffer))))
-       (t (with-current-buffer buffer                        ; barebones q-session
-            (message "Starting q with: \"%s\"" ob-q-program)
-            (comint-mode)
-            (comint-exec buffer "ob-q" ob-q-program nil nil)
-            (setq-local comint-prompt-regexp "^q)+")
-            (current-buffer)))))))
-
-;;; Taken from github psaris/q-mode, decoupling the package
-(defun ob-q-strip (text)
-  "Strip TEXT of all trailing comments, newlines and excessive whitespace."
-  (let* ((text (replace-regexp-in-string "^\\(?:[^\\\\].*\\)?[ \t]\\(/.*\\)\n" "" text t t 1)) ; / comments
-         (text (replace-regexp-in-string "^/.+$" "" text t t))                                 ; / comments
-         (text (replace-regexp-in-string "[ \t\n]+$" "" text t t))                             ; excess white space
-         (text (replace-regexp-in-string "\n[ \t]+" "" text t t)))                             ; fold functions
-    text))
+            (current-buffer))))))))
 
 ;;;###autoload
 ;;;(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
