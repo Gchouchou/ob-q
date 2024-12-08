@@ -68,7 +68,8 @@
 
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body."
-  (let* ((body (q-strip (concat (when-let ((prologue (cdr (assoc :prologue processed-params))))
+  (let* ((processed-params (or processed-params (org-babel-process-params params)))
+         (body (q-strip (concat (when-let ((prologue (cdr (assoc :prologue processed-params))))
                                   (concat prologue "\n"))
                                 body "\n"
                                 (cdr (assoc :epilogue processed-params)))))
