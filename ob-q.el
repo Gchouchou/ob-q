@@ -87,37 +87,55 @@ This function is called by `org-babel-execute-src-block'"
          (async (org-babel-comint-use-async params))
          (result-type (cdr (assoc :result-type processed-params))))
     (if async
-        nil
+        (let ((uuid (org-id-uuid)))
+          (org-babel-comint-async-register
+           session (current-buffer)
+           "\"ob_comint_async_q_\\(start\\|end\\)_\\(.+\\)\""
+           ;; TODO use cond to handle output
+           (cond
+            ((eq 'output result-type) 'org-babel-chomp)
+            ((member "verbatim" (cdr (assoc :result-params processed-params))) 'ob-q--extract-value)
+            (t 'ob-q-post-process-result))
+           nil)
+          (org-babel-comint-input-command
+           session
+           (concat (format "\"ob_comint_async_q_start_%s\"\n" uuid)
+                   (ob-q-strip full-body)
+                   (format "\n\"ob_comint_async_q_end_%s\"\n" uuid)))
+          uuid)
       (let ((raw-output
              (if session
-                 (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                        (cmd (format "%s %s"
-                                     (if (featurep 'q-mode) q-program ob-q-program)
-                                     (org-babel-process-file-name tmp-src-file))))
-                   (with-temp-file tmp-src-file (insert full-body))
-                   (org-babel-eval cmd ""))
-               (mapconcat
-                #'org-trim
-                (butlast
-                 (org-babel-comint-with-output
-                     (session ob-q-eoe-output)
-                   (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
-                   (comint-send-input nil t))
-                 1)
-                "\n"))))
+                 (mapconcat
+                  #'org-trim
+                  (butlast
+                   (org-babel-comint-with-output
+                       (session ob-q-eoe-output)
+                     (insert (ob-q-strip full-body) "\n" ob-q-eoe-indicator)
+                     (comint-send-input nil t))
+                   1)
+                  "\n")
+               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
+                      (cmd (format "%s %s"
+                                   (if (featurep 'q-mode) q-program ob-q-program)
+                                   (org-babel-process-file-name tmp-src-file))))
+                 (with-temp-file tmp-src-file (insert full-body))
+                 (org-babel-eval cmd "")))))
         (pcase result-type
-          ('value (let ((raw-value (substring
-                                    raw-output
-                                    (+ (length ob-q-soe-output)
-                                       (string-match-p ob-q-soe-output raw-output)))))
-                    (if (member "verbatim" (cdr (assoc :result-params processed-params)))
-                        raw-value
-                      (ob-q-post-process-result raw-value))))
+          ('value (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+                        (ob-q--extract-value raw-output)
+                      (ob-q-post-process-result raw-output)))
           ('output raw-output))))))
+
+(defun ob-q--extract-value (result)
+  "Extract value from RESULT."
+  (substring result
+             (when-let ((start-index (string-match-p ob-q-soe-output result)))
+               (+ start-index (length ob-q-soe-output)))))
 
 (defun ob-q-post-process-result (result)
   "Convert the RESULT to elisp."
-  (let* ((delim (string-match-p ";" result))
+  (let* ((result (ob-q--extract-value result))
+         (delim (string-match-p ";" result))
          (type (string-to-number (substring result 0 delim)))
          (split-result (substring result (+ delim 1))))
     (cond
