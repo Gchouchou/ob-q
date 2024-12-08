@@ -25,12 +25,21 @@ Some features:
 
 ## Sessions
 
-`:session` headers only supports `q` interpreter sessions. It **does not support** `qcon` sessions. Please use the `:remote` header argument described below
+`:session` headers only supports `q` interpreter sessions. It **does not support** `qcon` sessions. Please use the `:handle` header argument described below
 
 ## Asynchronous Execution
 
 Use `:async` header to execute codeblock asynchronously.
 
-## Remote
+## Handle
 
-WIP
+The `:handle` header specifies an interprocess communication handle. This header argument tells org-babel to wrap the code body into a single line string and then executes a
+[one shot request](https://code.kx.com/q/ref/hopen/#one-shot-request).
+This means that it is possible to have both `:session` and `:handle` header arguments on the same codeblock. The session will execute a oneshot request to the handle.
+
+`:handle` and `:async` do not play well together. Runing a second codeblock with async while waiting for the first query will fail since the handle will occupied.
+This issue does not happen with the `:session` header since the session is also occupied and will process the second query synchronously after the first.
+
+# Known Bugs and Issues
+
+- Getting an error with `:session` argument leads to confusing output. Can be fixed using trap and error trace.

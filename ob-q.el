@@ -55,20 +55,27 @@
 (defun org-babel-expand-body:q (body params &optional processed-params)
   "Expand BODY according to PARAMS and PROCESSED-PARAMS, return the expanded body."
   (let* ((body (q-strip (concat (when-let ((prologue (cdr (assoc :prologue processed-params))))
-                                     (concat prologue "\n"))
-                                   body "\n"
-                                   (cdr (assoc :epilogue processed-params)))))
+                                  (concat prologue "\n"))
+                                body "\n"
+                                (cdr (assoc :epilogue processed-params)))))
          (vars (org-babel--get-vars processed-params))
-         (type-processed-body
-          (pcase (cdr (assoc :result-type processed-params))
-            ('value (concat (ob-q-preprocess-fun processed-params)
-                            (ob-q-fun-wrapper body vars)))
-            ('output (concat (mapconcat
-                              (lambda (pair)
-                                (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
-                              vars)
-                             body)))))
-    type-processed-body))
+         (handle-header (cdr (assoc :handle processed-params)))
+         (handle (unless (string= handle-header "none") (or handle-header (q-qcon-default-args)))))
+    (pcase (cdr (assoc :result-type processed-params))
+      ('value (let ((f-wrapped (ob-q-fun-wrapper body vars)))
+                (concat (ob-q-preprocess-fun processed-params)
+                        (if handle
+                            (format "`:%s %S" handle (q-strip f-wrapped))
+                          f-wrapped))))
+      ('output (let ((full-body
+                      (concat (mapconcat
+                               (lambda (pair)
+                                 (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
+                               vars)
+                              body)))
+                 (if handle
+                     (format "`:%s \"%s\"" handle (replace-regexp-in-string "\n" ";\\n" full-body nil t))
+                   full-body))))))
 
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
@@ -86,7 +93,6 @@ This function is called by `org-babel-execute-src-block'"
           (org-babel-comint-async-register
            session (current-buffer)
            "\"ob_comint_async_q_\\(start\\|end\\)_\\(.+\\)\""
-           ;; TODO use cond to handle output
            (cond
             ((eq 'output result-type) 'org-babel-chomp)
             ((member "verbatim" (cdr (assoc :result-params processed-params))) 'ob-q--extract-value)
@@ -251,7 +257,7 @@ Returns the initialized session buffer."
             (current-buffer))))))))
 
 ;;;###autoload
-;;;(defvar org-babel-default-header-args:q (list '(:results . "verbatim" )))
+(defvar org-babel-default-header-args:q (list '(:handle . "none" )))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
