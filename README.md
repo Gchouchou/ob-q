@@ -5,11 +5,12 @@
 ob-q adds [org-babel](https://orgmode.org/worg/org-contrib/babel/) support for evaluating codeblocks
 written in [q/kdb+](https://code.kx.com/q/) in org files, a markup language from [emacs](https://www.gnu.org/software/emacs/).
 
-Some features:
-- Session evaluation (only q console)
-- Asynchronous execution
-- Basic value extraction and passing
+Features:
 - Integration with [q-mode](https://github.com/psaris/q-mode/tree/master)
+- Session evaluation (only q console)
+- Remote q execution with `hopen`
+- Basic value extraction and passing
+- Asynchronous execution
 
 ## Installation
 
@@ -25,7 +26,7 @@ Some features:
 
 ## Sessions
 
-`:session` headers only supports `q` interpreter sessions. It **does not support** `qcon` sessions. Please use the `:handle` header argument described below
+`:session` headers only supports `q` interpreter sessions. It **does not support** `qcon` sessions. Please use the `:handle` header argument to execute code on a remote session.
 
 ## Asynchronous Execution
 
