@@ -213,7 +213,7 @@ This function is called by `org-babel-execute-src-block'"
 
 (defun ob-q-fun-wrapper (body &optional vars)
   "Wraps BODY in a q lambda with VARS as parameters.
-Uses trap to catch errors."
+Returns backtrace string if there is an error."
   (concat ".Q.trpd["
           "{["
           (when vars
@@ -276,7 +276,7 @@ Returns the initialized session buffer."
             (current-buffer))))))))
 
 ;;;###autoload
-(defvar org-babel-default-header-args:q (list '(:handle . "none" )))
+(defvar org-babel-default-header-args:q (list '(:handle . "none")))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
