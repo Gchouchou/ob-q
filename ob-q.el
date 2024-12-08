@@ -80,7 +80,10 @@
       ('value (let ((f-wrapped (ob-q-fun-wrapper body vars)))
                 (concat (ob-q-preprocess-fun processed-params)
                         (if handle
-                            (format "`:%s \"%s\"" handle (q-strip f-wrapped))
+                            (format "`:%s \"%s\"" handle
+                                    (replace-regexp-in-string
+                                     "\"" "\\\""
+                                     (q-strip f-wrapped))
                           f-wrapped))))
       ('output (let ((full-body
                       (concat (mapconcat
@@ -89,7 +92,9 @@
                                vars)
                               body)))
                  (if handle
-                     (format "`:%s \"%s\"" handle (replace-regexp-in-string ";?\n" ";\\n" full-body nil t))
+                     (format "`:%s \"%s\"" handle (replace-regexp-in-string
+                                                   "\"" "\\\""
+                                                   (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)))
                    full-body))))))
 
 (defun org-babel-execute:q (body params)
