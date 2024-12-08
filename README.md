@@ -43,4 +43,4 @@ This issue does not happen with the `:session` header since the session is also 
 
 # Known Bugs and Issues
 
-- Getting an error with `:session` argument leads to confusing output. Can be fixed using trap and error trace.
+- Getting an error with `:session` argument with `:results value` leads to confusing output. Can be fixed using trap and error trace.

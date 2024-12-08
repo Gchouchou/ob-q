@@ -28,7 +28,18 @@
 
 ;;; Commentary:
 
-;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
+;;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
+;;; Features:
+;;; Integration with q-mode
+;;; Session evaluation (only q console)
+;;; Remote q execution with `hopen`
+;;; Basic value extraction and passing
+;;; Asynchronous execution
+
+;;; If asynchronous execution is not necessary, emacs 27.1 and higher can be used.
+
+;;; To pass code block to remote q-session, use the `:header' argument
+;;; It defaults to q-mode's q-qcon-default-args value or a specified host:port.
 
 ;;; Requirements:
 ;;; Package-Requires: ((emacs "28.1") (q-mode "20241129.100"))
