@@ -89,7 +89,7 @@
                                vars)
                               body)))
                  (if handle
-                     (format "`:%s \"%s\"" handle (replace-regexp-in-string "\n" ";\\n" full-body nil t))
+                     (format "`:%s \"%s\"" handle (replace-regexp-in-string ";?\n" ";\\n" full-body nil t))
                    full-body))))))
 
 (defun org-babel-execute:q (body params)
