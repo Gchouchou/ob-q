@@ -83,7 +83,8 @@
                             (format "`:%s \"%s\"" handle
                                     (replace-regexp-in-string
                                      "\"" "\\\""
-                                     (q-strip f-wrapped))
+                                     (q-strip f-wrapped)
+                                     nil t))
                           f-wrapped))))
       ('output (let ((full-body
                       (concat (mapconcat
