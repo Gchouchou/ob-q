@@ -1,9 +1,10 @@
-;;; ob-q.el --- org-babel functions for q evaluation
+;;; ob-q.el --- Org-babel functions for q evaluation
 
-;; Copyright (C) Justin Yu <jusytinyu@gmail.com>
+;; Copyright (C) 2024 Justin Yu <jusytinyu@gmail.com>
 
 ;; Author: Justin Yu
 ;; Keywords: literate programming, reproducible research
+;; Homepage: https://github.com/Gchouchou/ob-q
 ;; Created 7 Dec 2024
 ;; Version: 0.1
 
@@ -29,6 +30,8 @@
 ;;; Commentary:
 
 ;;; This file adds support for evaluating q (kdb+/q) code blocks in org-babel.
+;;; It requires q-mode from https://github.com/psaris/q-mode
+
 ;;; Features:
 ;;; Integration with q-mode
 ;;; Session evaluation (only q console)
@@ -42,7 +45,7 @@
 ;;; It defaults to q-mode's q-qcon-default-args value or a specified host:port.
 
 ;;; Requirements:
-;;; Package-Requires: ((emacs "28.1") (q-mode "20241129.100"))
+;;; Package-Requires: ((emacs "28.1"))
 
 ;;; Code:
 
