@@ -40,7 +40,3 @@ This means that it is possible to have both `:session` and `:handle` header argu
 
 `:handle` and `:async` do not play well together. Runing a second codeblock with async while waiting for the first query will fail since the handle will occupied.
 This issue does not happen with the `:session` header since the session is also occupied and will process the second query synchronously after the first.
-
-# Known Bugs and Issues
-
-- Getting an error with `:session` argument with `:results value` leads to confusing output. Can be fixed using trap and error trace.

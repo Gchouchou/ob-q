@@ -76,7 +76,7 @@
       ('value (let ((f-wrapped (ob-q-fun-wrapper body vars)))
                 (concat (ob-q-preprocess-fun processed-params)
                         (if handle
-                            (format "`:%s %S" handle (q-strip f-wrapped))
+                            (format "`:%s \"%s\"" handle (q-strip f-wrapped))
                           f-wrapped))))
       ('output (let ((full-body
                       (concat (mapconcat
@@ -212,20 +212,28 @@ This function is called by `org-babel-execute-src-block'"
 ;; TODO emacs table
 
 (defun ob-q-fun-wrapper (body &optional vars)
-  "Wraps BODY in a q lambda with VARS as parameters."
-  (concat "{["
+  "Wraps BODY in a q lambda with VARS as parameters.
+Uses trap to catch errors."
+  (concat ".Q.trpd["
+          "{["
           (when vars
             (mapconcat
              (lambda (pair)
                (symbol-name (car pair)))
              vars ";"))
-          "]\n " (replace-regexp-in-string "\n" ";\n " body) "\n }["
-          (when vars
-            (mapconcat
-             (lambda (pair)
-               (ob-q-var-to-q (cdr pair)))
-             vars ";"))
-          "]"))
+          "]\n " (replace-regexp-in-string "\n" ";\n " body) "\n };\n "
+          (pcase (length vars)
+            (0 "enlist 0b")
+            (1 (format "enlist %s" (ob-q-var-to-q (cdr (car vars)))))
+            (_ (concat "("
+                       (mapconcat
+                        (lambda (pair)
+                          (ob-q-var-to-q (cdr pair)))
+                        vars ";")
+                       ")")))
+           ";\n "
+           "{\"error: \",x,\"\\nbacktrace:\\n\",.Q.sbt y}"
+           "];"))
 
 (defun ob-q-preprocess-fun (processed-params)
   "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
