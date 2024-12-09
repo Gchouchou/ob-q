@@ -14,6 +14,7 @@ Features:
 
 ## Installation
 
+The package requires `q-mode`.
 ``` emacs-lisp
 (require 'ob-q)
 ```
