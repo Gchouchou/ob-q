@@ -198,12 +198,12 @@ This function is called by `org-babel-execute-src-block'"
         (proper-list-p var))
     (concat
      "("
-     (mapconcat #'ob-q-var-to-q var ";") ; do it recursively
+     (mapconcat #'ob-q-var-to-q var ";")
      ")"))
    ((listp var)
     (concat
      "("
-     (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";") ; do it recursively
+     (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";")
      ")"))
    ((symbolp var) (format "`%S" var))
    ;; Match a datetime string
