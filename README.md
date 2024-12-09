@@ -20,10 +20,6 @@ Features:
 
 # Headers
 
-## Supported :var Header Arguments Types
-
-`ob-q` currently does not support tables and dictionaries in `:var` header arguments.
-
 ## Sessions
 
 `:session` headers only supports `q` interpreter sessions. It **does not support** `qcon` sessions. Please use the `:handle` header argument to execute code on a remote session.
@@ -40,3 +36,7 @@ This means that it is possible to have both `:session` and `:handle` header argu
 
 `:handle` and `:async` do not play well together. Runing a second codeblock with async while waiting for the first query will fail since the handle will occupied.
 This issue does not happen with the `:session` header since the session is also occupied and will process the second query synchronously after the first.
+
+## Supported :var Header Arguments Types
+
+`ob-q` currently does not support tables and dictionaries in `:var` header arguments.
