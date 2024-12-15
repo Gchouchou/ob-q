@@ -98,55 +98,6 @@
                                                    (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)))
                    full-body))))))
 
-(defun org-babel-execute:q (body params)
-  "Execute q BODY according to PARAMS.
-This function is called by `org-babel-execute-src-block'"
-  (unless (featurep 'ob-q) (require 'ob-q))
-  (let* ((processed-params (org-babel-process-params params))
-         (full-body (org-babel-expand-body:q body params processed-params))
-         (session-name (cdr (assoc :session processed-params)))
-         (session (unless (string= session-name "none")
-                    (ob-q-initialize-session session-name)))
-         (async (org-babel-comint-use-async params))
-         (result-type (cdr (assoc :result-type processed-params))))
-    (if async
-        (let ((uuid (org-id-uuid)))
-          (org-babel-comint-async-register
-           session (current-buffer)
-           "\"ob_comint_async_q_\\(start\\|end\\)_\\(.+\\)\""
-           (cond
-            ((eq 'output result-type) 'org-babel-chomp)
-            ((member "verbatim" (cdr (assoc :result-params processed-params))) 'ob-q--extract-value)
-            (t 'ob-q-post-process-result))
-           nil)
-          (org-babel-comint-input-command
-           session
-           (concat (format "\"ob_comint_async_q_start_%s\"\n" uuid)
-                   (q-strip full-body)
-                   (format "\n\"ob_comint_async_q_end_%s\"\n" uuid)))
-          uuid)
-      (let ((raw-output
-             (if session
-                 (mapconcat
-                  #'org-trim
-                  (butlast
-                   (org-babel-comint-with-output
-                       (session ob-q-eoe-output)
-                     (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
-                     (comint-send-input nil t))
-                   1)
-                  "\n")
-               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                      (cmd (format "%s %s" q-program
-                                   (org-babel-process-file-name tmp-src-file))))
-                 (with-temp-file tmp-src-file (insert full-body))
-                 (org-babel-eval cmd "")))))
-        (pcase result-type
-          ('value (if (member "verbatim" (cdr (assoc :result-params processed-params)))
-                        (ob-q--extract-value raw-output)
-                      (ob-q-post-process-result raw-output)))
-          ('output raw-output))))))
-
 (defun ob-q--extract-value (result)
   "Extract value from RESULT."
   (substring result
@@ -286,6 +237,54 @@ Returns the initialized session buffer."
 
 ;;;###autoload
 (defvar org-babel-default-header-args:q (list '(:handle . "none")))
+
+(defun org-babel-execute:q (body params)
+  "Execute q BODY according to PARAMS.
+This function is called by `org-babel-execute-src-block'"
+  (let* ((processed-params (org-babel-process-params params))
+         (full-body (org-babel-expand-body:q body params processed-params))
+         (session-name (cdr (assoc :session processed-params)))
+         (session (unless (string= session-name "none")
+                    (ob-q-initialize-session session-name)))
+         (async (org-babel-comint-use-async params))
+         (result-type (cdr (assoc :result-type processed-params))))
+    (if async
+        (let ((uuid (org-id-uuid)))
+          (org-babel-comint-async-register
+           session (current-buffer)
+           "\"ob_comint_async_q_\\(start\\|end\\)_\\(.+\\)\""
+           (cond
+            ((eq 'output result-type) 'org-babel-chomp)
+            ((member "verbatim" (cdr (assoc :result-params processed-params))) 'ob-q--extract-value)
+            (t 'ob-q-post-process-result))
+           nil)
+          (org-babel-comint-input-command
+           session
+           (concat (format "\"ob_comint_async_q_start_%s\"\n" uuid)
+                   (q-strip full-body)
+                   (format "\n\"ob_comint_async_q_end_%s\"\n" uuid)))
+          uuid)
+      (let ((raw-output
+             (if session
+                 (mapconcat
+                  #'org-trim
+                  (butlast
+                   (org-babel-comint-with-output
+                       (session ob-q-eoe-output)
+                     (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
+                     (comint-send-input nil t))
+                   1)
+                  "\n")
+               (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
+                      (cmd (format "%s %s" q-program
+                                   (org-babel-process-file-name tmp-src-file))))
+                 (with-temp-file tmp-src-file (insert full-body))
+                 (org-babel-eval cmd "")))))
+        (pcase result-type
+          ('value (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+                        (ob-q--extract-value raw-output)
+                      (ob-q-post-process-result raw-output)))
+          ('output raw-output))))))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
