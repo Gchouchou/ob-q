@@ -80,7 +80,7 @@
       ('value (let ((f-wrapped (ob-q-fun-wrapper body vars)))
                 (concat (ob-q-preprocess-fun processed-params)
                         (if handle
-                            (format "`$\":%s\" \"%s\"" handle
+                            (format "(`$\":%s\") \"%s\"" handle
                                     (replace-regexp-in-string
                                      "\"" "\\\""
                                      (q-strip f-wrapped)
@@ -93,7 +93,7 @@
                                vars)
                               body)))
                  (if handle
-                     (format "`$\":%s\" \"%s\"" handle (replace-regexp-in-string
+                     (format "(`$\":%s\") \"%s\"" handle (replace-regexp-in-string
                                                    "\"" "\\\""
                                                    (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)))
                    full-body))))))
