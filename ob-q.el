@@ -74,10 +74,11 @@
                                 body "\n"
                                 (cdr (assoc :epilogue processed-params)))))
          (vars (org-babel--get-vars processed-params))
+         (enable-trap (string= "yes" (cdr (assoc :trap processed-params))))
          (handle-header (cdr (assoc :handle processed-params)))
          (handle (unless (string= handle-header "none") (or handle-header (q-qcon-default-args)))))
     (pcase (cdr (assoc :result-type processed-params))
-      ('value (let ((f-wrapped (ob-q-fun-wrapper body vars)))
+      ('value (let ((f-wrapped (ob-q-fun-wrapper body enable-trap vars)))
                 (concat (ob-q-preprocess-fun processed-params)
                         (if handle
                             (format "(`$\":%s\") \"%s\"" handle
@@ -86,17 +87,18 @@
                                      (q-strip f-wrapped)
                                      nil t))
                           f-wrapped))))
-      ('output (let ((full-body
-                      (concat (mapconcat
-                               (lambda (pair)
-                                 (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
-                               vars)
-                              body)))
+      ('output (let ((full-body (concat (mapconcat
+                                         (lambda (pair)
+                                           (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
+                                         vars)
+                                        body)))
                  (if handle
-                     (format "(`$\":%s\") \"%s\"" handle (replace-regexp-in-string
-                                                   "\"" "\\\""
-                                                   (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)
-                                                   nil t))
+                     (format "(`$\":%s\") \"%s\""
+                             handle
+                             (replace-regexp-in-string
+                              "\"" "\\\""
+                              (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)
+                              nil t))
                    full-body))))))
 
 (defun ob-q--extract-value (result)
@@ -172,29 +174,45 @@
     (format "%s" var))
    (t (format "%S" var))))
 
-(defun ob-q-fun-wrapper (body &optional vars)
+(defun ob-q-fun-wrapper (body trap &optional vars)
   "Wraps BODY in a q lambda with VARS as parameters.
-Returns backtrace string if there is an error."
-  (concat ".Q.trpd["
-          "{["
-          (when vars
-            (mapconcat
-             (lambda (pair)
-               (symbol-name (car pair)))
-             vars ";"))
-          "]\n " (replace-regexp-in-string "\n" ";\n " body) "\n };\n "
-          (pcase (length vars)
-            (0 "enlist 0b")
-            (1 (format "enlist %s" (ob-q-var-to-q (cdr (car vars)))))
-            (_ (concat "("
-                       (mapconcat
-                        (lambda (pair)
-                          (ob-q-var-to-q (cdr pair)))
-                        vars ";")
-                       ")")))
-           ";\n "
-           "{\"error: \",x,\"\\nbacktrace:\\n\",.Q.sbt y}"
-           "]"))
+If TRAP is not nil, also wraps BODY and VARS with
+`.Q.trp' with 0 or 1 VARS and `.Q.trpd' when there are
+2 or VARS. `.Q.trp' needs q version 3.5 and `.Q.trpd'
+needs q version 4.1"
+  (let* ((vars-length (if vars (length vars) 0))
+         (func (concat "{["
+                       (when vars
+                         (mapconcat
+                          (lambda (pair) (symbol-name (car pair)))
+                          vars ";"))
+                       "]\n "
+                       (replace-regexp-in-string "\n" ";\n " body) "\n }")))
+    (if trap
+        (concat (if (< vars-length 2) ".Q.trp" ".Q.trpd")
+                "["
+                func
+                ";\n "
+                (pcase vars-length
+                  (0 "0b")
+                  (1 (format "%s" (ob-q-var-to-q (cdr (car vars)))))
+                  (_ (concat "("
+                             (mapconcat
+                              (lambda (pair) (ob-q-var-to-q (cdr pair)))
+                              vars ";")
+                             ")")))
+                ";\n "
+                "{\"error: \",x,\"\\nbacktrace:\\n\",.Q.sbt y}"
+                "]")
+      ;; else just do simple function and put var values
+      (concat func
+              "["
+              (when vars
+                (mapconcat
+                 (lambda (pair)
+                   (ob-q-var-to-q (cdr pair)))
+                 vars ";"))
+              "]"))))
 
 (defun ob-q-preprocess-fun (processed-params)
   "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
@@ -237,8 +255,9 @@ Returns the initialized session buffer."
             (current-buffer))))))))
 
 ;;;###autoload
-(defvar org-babel-default-header-args:q (list '(:handle . "none")))
+(defvar org-babel-default-header-args:q (list '(:handle . "none") '(:trap . "no")))
 
+;;;###autoload
 (defun org-babel-execute:q (body params)
   "Execute q BODY according to PARAMS.
 This function is called by `org-babel-execute-src-block'"
