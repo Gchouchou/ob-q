@@ -95,7 +95,8 @@
                  (if handle
                      (format "(`$\":%s\") \"%s\"" handle (replace-regexp-in-string
                                                    "\"" "\\\""
-                                                   (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)))
+                                                   (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)
+                                                   nil t))
                    full-body))))))
 
 (defun ob-q--extract-value (result)
