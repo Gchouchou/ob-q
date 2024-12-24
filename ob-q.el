@@ -194,7 +194,7 @@ Returns backtrace string if there is an error."
                        ")")))
            ";\n "
            "{\"error: \",x,\"\\nbacktrace:\\n\",.Q.sbt y}"
-           "];"))
+           "]"))
 
 (defun ob-q-preprocess-fun (processed-params)
   "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
