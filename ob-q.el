@@ -78,7 +78,7 @@
          (handle-header (cdr (assoc :handle processed-params)))
          (handle (unless (string= handle-header "none") (or handle-header (q-qcon-default-args)))))
     (pcase (cdr (assoc :result-type processed-params))
-      ('value (let ((f-wrapped (ob-q-fun-wrapper body enable-trap vars)))
+      ('value (let ((f-wrapped (ob-q-fun-wrapper body vars enable-trap)))
                 (concat (ob-q-preprocess-fun processed-params)
                         (if handle
                             (format "(`$\":%s\") \"%s\"" handle
@@ -174,7 +174,7 @@
     (format "%s" var))
    (t (format "%S" var))))
 
-(defun ob-q-fun-wrapper (body trap &optional vars)
+(defun ob-q-fun-wrapper (body &optional vars trap)
   "Wraps BODY in a q lambda with VARS as parameters.
 If TRAP is not nil, also wraps BODY and VARS with
 `.Q.trp' with 0 or 1 VARS and `.Q.trpd' when there are
