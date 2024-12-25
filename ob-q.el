@@ -82,10 +82,14 @@
                 (concat (ob-q-preprocess-fun processed-params)
                         (if handle
                             (format "(`$\":%s\") \"%s\"" handle
+                                    ;; escape "
                                     (replace-regexp-in-string
                                      "\"" "\\\""
-                                     (q-strip f-wrapped)
-                                     nil t))
+                                     ;; escape \
+                                     (replace-regexp-in-string
+                                      "\\\\" "\\\\"
+                                      (q-strip f-wrapped)
+                                      nil t)))
                           f-wrapped))))
       ('output (let ((full-body (concat (mapconcat
                                          (lambda (pair)
@@ -95,9 +99,14 @@
                  (if handle
                      (format "(`$\":%s\") \"%s\""
                              handle
+                             ;; escape "
                              (replace-regexp-in-string
                               "\"" "\\\""
-                              (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)
+                              ;; escape \
+                              (replace-regexp-in-string
+                               "\\\\" "\\\\"
+                               (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)
+                               nil t)
                               nil t))
                    full-body))))))
 
