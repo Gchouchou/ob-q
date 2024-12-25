@@ -6,7 +6,7 @@ ob-q adds [org-babel](https://orgmode.org/worg/org-contrib/babel/) support for e
 written in [q/kdb+](https://code.kx.com/q/) in org files, a markup language from [emacs](https://www.gnu.org/software/emacs/).
 
 Features:
-- Integration with [q-mode](https://github.com/psaris/q-mode/tree/master)
+- Integration with [`q-mode`](https://github.com/psaris/q-mode/tree/master)
 - Session evaluation (only q console)
 - Remote q execution with `hopen`
 - Basic value extraction and passing
@@ -14,10 +14,8 @@ Features:
 
 ## Installation
 
-The package requires `q-mode`.
-``` emacs-lisp
-(require 'ob-q)
-```
+The package depends on [`q-mode`](https://github.com/psaris/q-mode/tree/master).
+It should be autoloaded.
 
 # Headers
 
