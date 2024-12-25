@@ -150,15 +150,13 @@
    ((null var) nil)
    ((or (vectorp var)
         (proper-list-p var))
-    (concat
-     "("
-     (mapconcat #'ob-q-var-to-q var ";")
-     ")"))
+    (concat "("
+            (mapconcat #'ob-q-var-to-q var ";")
+            ")"))
    ((listp var)
-    (concat
-     "("
-     (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";")
-     ")"))
+    (concat "("
+            (mapconcat #'ob-q-var-to-q (list (car var) (cdr var)) ";")
+            ")"))
    ((symbolp var) (format "`%S" var))
    ;; Match a datetime string
    ((and (stringp var)
@@ -216,12 +214,11 @@ needs q version 4.1"
 
 (defun ob-q-preprocess-fun (processed-params)
   "Outputs a q-function string depending on PROCESSED-PARAMS to preprocess output."
-  (concat
-   "{[result]\n "
-   ob-q-soe-indicator "\n "
-   (if (member "verbatim" (cdr (assoc :result-params processed-params)))
-       "1 .Q.s result;" ; when in verbatim use q string maker
-        "\
+  (concat "{[result]\n "
+          ob-q-soe-indicator "\n "
+          (if (member "verbatim" (cdr (assoc :result-params processed-params)))
+              "1 .Q.s result;" ; when in verbatim use q string maker
+            "\
 rtype:type result;
  1 string rtype;
  1 \";\";
@@ -235,7 +232,7 @@ rtype:type result;
  .Q.s result
  ];
  1 \"\\n\";")
-   "}"))
+          "}"))
 
 (defun ob-q-initialize-session (&optional session)
   "If there is not a current inferior-process-buffer in SESSION then create.
