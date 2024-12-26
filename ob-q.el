@@ -102,10 +102,13 @@
                              ;; escape "
                              (replace-regexp-in-string
                               "\"" "\\\""
-                              ;; escape \
+                              ;; turn multiline into newline
                               (replace-regexp-in-string
-                               "\\\\" "\\\\"
-                               (replace-regexp-in-string ";?\n" ";\\n" full-body nil t)
+                               ";?\n" ";\\n"
+                               ;; escape \
+                               (replace-regexp-in-string
+                                "\\\\" "\\\\"
+                                full-body nil t)
                                nil t)
                               nil t))
                    full-body))))))
