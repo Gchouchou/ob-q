@@ -16,7 +16,7 @@ Features:
 
 The package depends on [`q-mode`](https://github.com/psaris/q-mode/tree/master).
 Then require the package
-``` q
+``` emacs-lisp
 (require 'ob-q)
 ```
 
