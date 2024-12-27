@@ -76,42 +76,30 @@
          (vars (org-babel--get-vars processed-params))
          (enable-trap (string= "yes" (cdr (assoc :trap processed-params))))
          (handle-header (cdr (assoc :handle processed-params)))
-         (handle (unless (string= handle-header "none") (or handle-header (q-qcon-default-args)))))
-    (pcase (cdr (assoc :result-type processed-params))
-      ('value (let ((f-wrapped (ob-q-fun-wrapper body vars enable-trap)))
-                (concat (ob-q-preprocess-fun processed-params)
-                        (if handle
-                            (format "(`$\":%s\") \"%s\"" handle
-                                    ;; escape "
-                                    (replace-regexp-in-string
-                                     "\"" "\\\""
-                                     ;; escape \
-                                     (replace-regexp-in-string
-                                      "\\\\" "\\\\"
-                                      (q-strip f-wrapped)
-                                      nil t)))
-                          f-wrapped))))
-      ('output (let ((full-body (concat (mapconcat
-                                         (lambda (pair)
-                                           (format "%s:%s;\n" (car pair) (ob-q-var-to-q (cdr pair))))
-                                         vars)
-                                        body)))
-                 (if handle
-                     (format "(`$\":%s\") \"%s\""
-                             handle
-                             ;; escape "
-                             (replace-regexp-in-string
-                              "\"" "\\\""
-                              ;; turn multiline into newline
-                              (replace-regexp-in-string
-                               ";?\n" ";\\n"
-                               ;; escape \
-                               (replace-regexp-in-string
-                                "\\\\" "\\\\"
-                                full-body nil t)
-                               nil t)
-                              nil t))
-                   full-body))))))
+         (result-type (cdr (assoc :result-type processed-params)))
+         (full-body (pcase result-type
+                      ('value (ob-q-fun-wrapper body vars enable-trap))
+                      ('output (concat (mapconcat (lambda (pair)
+                                                    (format "%s:%s;\n"
+                                                            (car pair)
+                                                            (ob-q-var-to-q (cdr pair))))
+                                                  vars)
+                                       body))))
+         (full-body (if (not (string= handle-header "none"))
+                        (let* ((handle (or handle-header (q-qcon-default-args)))
+                               (string-body (q-strip full-body))
+                               (string-body (replace-regexp-in-string
+                                             "\\\\" "\\\\" string-body nil t))
+                               (string-body (replace-regexp-in-string
+                                             ";?\n" ";\\n" string-body nil t))
+                               (string-body (replace-regexp-in-string
+                                             "\"" "\\\"" string-body nil t)))
+                          (format "(`$\":%s\") \"%s\"" handle string-body))
+                      full-body)))
+    (pcase result-type
+      ('value (concat (ob-q-preprocess-fun processed-params)
+                      full-body))
+      ('output full-body))))
 
 (defun ob-q--extract-value (result)
   "Extract value from RESULT."
@@ -188,7 +176,8 @@
   "Wraps BODY in a q lambda with VARS as parameters.
 If TRAP is not nil, also wraps BODY and VARS with
 `.Q.trp' with 0 or 1 VARS and `.Q.trpd' when there are
-2 or VARS. `.Q.trp' needs q version 3.5 and `.Q.trpd'
+2 or VARS.
+`.Q.trp' needs q version 3.5 and `.Q.trpd'
 needs q version 4.1"
   (let* ((vars-length (if vars (length vars) 0))
          (func (concat "{["
@@ -197,7 +186,7 @@ needs q version 4.1"
                           (lambda (pair) (symbol-name (car pair)))
                           vars ";"))
                        "]\n "
-                       (replace-regexp-in-string "\n" ";\n " body) "\n }")))
+                       (replace-regexp-in-string ";?\n" ";\n " body) "\n }")))
     (if trap
         (concat (if (< vars-length 2) ".Q.trp" ".Q.trpd")
                 "["
