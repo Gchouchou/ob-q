@@ -71,8 +71,9 @@
   (let* ((processed-params (or processed-params (org-babel-process-params params)))
          (body (q-strip (concat (when-let ((prologue (cdr (assoc :prologue processed-params))))
                                   (concat prologue "\n"))
-                                body "\n"
-                                (cdr (assoc :epilogue processed-params)))))
+                                body
+                                (when-let ((epilogue (cdr (assoc :epilogue processed-params))))
+                                  (concat "\n" epilogue)))))
          (vars (org-babel--get-vars processed-params))
          (enable-trap (string= "yes" (cdr (assoc :trap processed-params))))
          (handle-header (cdr (assoc :handle processed-params)))
@@ -85,15 +86,22 @@
                                                             (ob-q-var-to-q (cdr pair))))
                                                   vars)
                                        body))))
+         ;; when using handle you must stringify the body
          (full-body (if (not (string= handle-header "none"))
                         (let* ((handle (or handle-header (q-qcon-default-args)))
                                (string-body (q-strip full-body))
+                               ;; first escape \ with \\
                                (string-body (replace-regexp-in-string
-                                             "\\\\" "\\\\" string-body nil t))
+                                             "\\\\" "\\\\"
+                                             string-body nil t))
+                               ;; escape new line \n with the literal \n
                                (string-body (replace-regexp-in-string
-                                             ";?\n" ";\\n" string-body nil t))
+                                             ";?\n" ";\\n"
+                                             string-body nil t))
+                               ;; escape apostrophe " with \"
                                (string-body (replace-regexp-in-string
-                                             "\"" "\\\"" string-body nil t)))
+                                             "\"" "\\\""
+                                             string-body nil t)))
                           (format "(`$\":%s\") \"%s\"" handle string-body))
                       full-body)))
     (pcase result-type
