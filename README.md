@@ -15,7 +15,10 @@ Features:
 ## Installation
 
 The package depends on [`q-mode`](https://github.com/psaris/q-mode/tree/master).
-It should be autoloaded.
+Then require the package
+``` q
+(require 'ob-q)
+```
 
 # Headers
 
