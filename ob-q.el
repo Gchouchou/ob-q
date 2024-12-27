@@ -85,7 +85,8 @@
                                                             (car pair)
                                                             (ob-q-var-to-q (cdr pair))))
                                                   vars)
-                                       body))))
+                                       body))
+                      (_ (error "Unknown result-type: %s" result-type))))
          ;; when using handle you must stringify the body
          (full-body (if (not (string= handle-header "none"))
                         (let* ((handle (or handle-header (q-qcon-default-args)))
