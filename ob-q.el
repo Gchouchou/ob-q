@@ -299,8 +299,7 @@ This function is called by `org-babel-execute-src-block'"
                    (org-babel-comint-with-output
                        (session ob-q-eoe-output)
                      (insert (q-strip full-body) "\n" ob-q-eoe-indicator)
-                     (comint-send-input nil t))
-                   1)
+                     (comint-send-input nil t)))
                   "\n")
                (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
                       (cmd (format "%s %s" q-program
