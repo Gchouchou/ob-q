@@ -95,15 +95,15 @@
                                (string-body (replace-regexp-in-string
                                              "\\\\" "\\\\"
                                              string-body nil t))
-                               ;; escape new line \n with the literal \n
-                               (string-body (replace-regexp-in-string
-                                             ";?\n" ";\\n"
-                                             string-body nil t))
                                ;; escape apostrophe " with \"
                                (string-body (replace-regexp-in-string
                                              "\"" "\\\""
-                                             string-body nil t)))
-                          (format "(`$\":%s\") \"%s\"" handle string-body))
+                                             string-body nil t))
+                               (split-body (split-string string-body "\n")))
+                          (mapconcat (lambda (statement)
+                                       (format "(`$\":%s\") \"%s\"" handle statement))
+                                     split-body
+                                     "\n"))
                       full-body)))
     (pcase result-type
       ('value (concat (ob-q-preprocess-fun processed-params)
