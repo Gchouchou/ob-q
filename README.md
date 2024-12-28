@@ -55,6 +55,20 @@ This means that it is possible to have both `:session` and `:handle` header argu
 `:handle` and `:async` do not play well together. Runing a second codeblock with async while waiting for the first query will fail since the handle will occupied.
 This issue does not happen with the `:session` header since the session is also occupied and will process the second query synchronously after the first.
 
+`:handle` also does not work as expected as with multiline commands with command line arguments. For example
+
+``` q
+\c 200 2000
+1+1
+```
+
+will fail since we try to wrap the console command with 1+1 and add a semi-colon. In other words, the body would be `\c 200 2000;\n1+1`
+and this is not valid. To get command line arguments to work, use only a single line without new line. In other words,
+``` q
+\c 200 2000
+```
+would work fine.
+
 ## Backtrace collection
 
 Use the header arg `:trap yes` to enable catching errors and printing the backtrace.

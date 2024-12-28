@@ -97,7 +97,7 @@
                                              string-body nil t))
                                ;; escape new line \n with the literal \n
                                (string-body (replace-regexp-in-string
-                                             "\n" "\\n"
+                                             ";?\n" ";\\n"
                                              string-body nil t))
                                ;; escape apostrophe " with \"
                                (string-body (replace-regexp-in-string
