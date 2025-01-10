@@ -90,7 +90,7 @@
          ;; when using handle you must stringify the body
          (full-body (if (not (string= handle-header "none"))
                         (let* ((handle (or handle-header (q-qcon-default-args)))
-                               (string-body (q-strip full-body))
+                               (string-body (org-trim (q-strip full-body)))
                                ;; first escape \ with \\
                                (string-body (replace-regexp-in-string
                                              "\\\\" "\\\\"
