@@ -57,7 +57,7 @@ This issue does not happen with the `:session` header since the session is also 
 
 ## Backtrace collection
 
-Use the header arg `:trap yes` to enable catching errors and printing the backtrace.
+Use the header arg `:trap` to enable catching errors and printing the backtrace.
 This will prevent the session from entering debugger and org babel will receive the backtrace string.
 
 This header only applies when the body is wrapped in a lambda with `:results value`.
@@ -65,6 +65,11 @@ It uses [`.Q.trp`](https://code.kx.com/q/ref/dotq/#trp-extend-trap-at) when ther
 through the header `:var`. This function is only available from q version 3.5 onwards.
 If there are 2 or more input parameters, it uses the [`.Q.trpd`](https://code.kx.com/q/ref/dotq/#trpd-extend-trap)
 which is only included in q version 4.1 and onwards.
+
+## Program Header
+
+You can customize which q program that is used to run the code using the `:program` header.
+Give a path to the executable or use an alias.
 
 ## Supported :var Header Arguments Types
 

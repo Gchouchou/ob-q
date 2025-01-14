@@ -75,7 +75,7 @@
                                 (when-let ((epilogue (cdr (assoc :epilogue processed-params))))
                                   (concat "\n" epilogue)))))
          (vars (org-babel--get-vars processed-params))
-         (enable-trap (string= "yes" (cdr (assoc :trap processed-params))))
+         (enable-trap (assoc :trap processed-params))
          (handle-header (cdr (assoc :handle processed-params)))
          (result-type (cdr (assoc :result-type processed-params)))
          (full-body (pcase result-type
@@ -262,7 +262,7 @@ Returns the initialized session buffer."
             (current-buffer))))))))
 
 ;;;###autoload
-(defvar org-babel-default-header-args:q (list '(:handle . "none") '(:trap . "no")))
+(defvar org-babel-default-header-args:q (list '(:handle . "none")))
 
 ;;;###autoload
 (defun org-babel-execute:q (body params)
@@ -274,7 +274,9 @@ This function is called by `org-babel-execute-src-block'"
          (session (unless (string= session-name "none")
                     (ob-q-initialize-session session-name)))
          (async (org-babel-comint-use-async params))
-         (result-type (cdr (assoc :result-type processed-params))))
+         (result-type (cdr (assoc :result-type processed-params)))
+         (program (cdr (assoc :program processed-params)))
+         (program (or program q-program)))
     (if async
         (let ((uuid (org-id-uuid)))
           (org-babel-comint-async-register
@@ -302,9 +304,9 @@ This function is called by `org-babel-execute-src-block'"
                      (comint-send-input nil t)))
                   "\n")
                (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
-                      (cmd (format "%s %s" q-program
+                      (cmd (format "%s %s" program
                                    (org-babel-process-file-name tmp-src-file))))
-                 (with-temp-file tmp-src-file (insert full-body "\nexit[]"))
+                 (with-temp-file tmp-src-file (insert full-body "\nexit[0]"))
                  (org-babel-eval cmd "")))))
         (pcase result-type
           ('value (if (member "verbatim" (cdr (assoc :result-params processed-params)))
