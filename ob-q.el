@@ -304,7 +304,7 @@ This function is called by `org-babel-execute-src-block'"
                (let* ((tmp-src-file (org-babel-temp-file "q-src-" ".q"))
                       (cmd (format "%s %s" q-program
                                    (org-babel-process-file-name tmp-src-file))))
-                 (with-temp-file tmp-src-file (insert full-body))
+                 (with-temp-file tmp-src-file (insert full-body "\nexit[]"))
                  (org-babel-eval cmd "")))))
         (pcase result-type
           ('value (if (member "verbatim" (cdr (assoc :result-params processed-params)))
