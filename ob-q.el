@@ -52,7 +52,6 @@
 (require 'ob)
 (require 'ob-eval)
 (require 'ob-comint)
-(require 'ob-async)
 (require 'q-mode)
 
 (defvar org-babel-tangle-lang-exts)
