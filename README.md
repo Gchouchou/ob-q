@@ -42,9 +42,17 @@ For example, the following will give an error.
 
 `:session` headers only supports `q` interpreter sessions. It **does not support** `qcon` sessions. Please use the `:handle` header argument to execute code on a remote session.
 
+## Program Header
+
+You can customize which q program that is used to run the code using the `:program` header.
+By default, we use the `q-program` variable from `q-mode`.
+Give a path to the executable or use an alias.
+
 ## Asynchronous Execution
 
-Use `:async` header to execute codeblock asynchronously.
+Use `:async` header to execute codeblock asynchronously. It uses by default `q-program` from `q-mode` on
+initialization of the package. If you need to customize
+the `q` binary ran in the subprocess, use the `:program` header from above.
 
 ## Handle
 
@@ -66,10 +74,6 @@ through the header `:var`. This function is only available from q version 3.5 on
 If there are 2 or more input parameters, it uses the [`.Q.trpd`](https://code.kx.com/q/ref/dotq/#trpd-extend-trap)
 which is only included in q version 4.1 and onwards.
 
-## Program Header
-
-You can customize which q program that is used to run the code using the `:program` header.
-Give a path to the executable or use an alias.
 
 ## Supported :var Header Arguments Types
 

@@ -52,6 +52,7 @@
 (require 'ob)
 (require 'ob-eval)
 (require 'ob-comint)
+(require 'ob-async)
 (require 'q-mode)
 
 (defvar org-babel-tangle-lang-exts)
@@ -313,6 +314,11 @@ This function is called by `org-babel-execute-src-block'"
                         (ob-q--extract-value raw-output)
                       (ob-q-post-process-result raw-output)))
           ('output raw-output))))))
+
+;;; pass q-program to async subprocess
+(add-hook 'ob-async-pre-execute-src-block-hook
+          `(lambda ()
+             (setq q-program ,q-program)))
 
 (provide 'ob-q)
 ;;; ob-q.el ends here
