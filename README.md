@@ -51,7 +51,7 @@ Give a path to the executable or use an alias.
 ## Asynchronous Execution
 
 Use `:async` header to execute codeblock asynchronously. It uses by default `q-program` from `q-mode` on
-initialization of the package. If you need to customize
+**initialization of the package**. If you need to customize
 the `q` binary ran in the subprocess, use the `:program` header from above.
 
 ## Handle
