@@ -156,11 +156,9 @@
 
 (defun ob-q-fun-wrapper (body &optional trap)
   "Wraps BODY in a q lambda.
-If TRAP is not nil, also wraps BODY and VARS with
-`.Q.trp' with 0 or 1 VARS and `.Q.trpd' when there are
-2 or VARS.
-`.Q.trp' needs q version 3.5 and `.Q.trpd'
-needs q version 4.1"
+If TRAP is not nil, also wraps BODY with
+`.Q.trp'.
+`.Q.trp' needs q version 3.5"
   (let* ((func (concat "{[]\n "
                        (replace-regexp-in-string ";?\n" ";\n " body) "\n }")))
     (if trap
