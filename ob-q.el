@@ -204,7 +204,7 @@ Returns the initialized session buffer."
           (unless (eq buffer buffer2) (kill-buffer buffer))
           (with-current-buffer buffer2
             (rename-buffer session)                          ; massage the buffer name
-            (setq q-active-buffer session)
+            (setq q-active-buffer buffer2)
             (current-buffer))))))))
 
 ;;;###autoload
