@@ -297,7 +297,8 @@ It then runs all hooks in `ob-q-edit-prep-q-hook'.
 This function is called by `org-edit-src-code'."
   (let* ((header (caddr babel-info))
          (handle (cdr (assq :handle header)))
-         (buffer (get-buffer (cdr (assq :session header)))))
+         (session (cdr (assq :session header)))
+         (buffer (unless (string= session "none") (get-buffer session))))
     (cond
      ((string-match-p "^[^:]*:[0-9]*$" handle)
       (message "Activating qcon handle %s" handle)
