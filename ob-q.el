@@ -304,12 +304,12 @@ This function is called by `org-edit-src-code'."
      ((string-match-p "^[^:]*:[0-9]*$" handle)
       (message "Activating qcon handle %s" handle)
       (q-qcon handle)
-      (display-buffer q-active-buffer))
+      (q-show-q-buffer))
      ((and (buffer-live-p buffer)
            (comint-check-proc buffer))
       (message "Activating buffer %s" buffer)
-      (setq q-active-buffer buffer)
-      (display-buffer q-active-buffer))))
+      (q-activate-buffer buffer)
+      (q-show-q-buffer))))
   ;; run hooks
   (mapc #'funcall ob-q-edit-prep-q-hook))
 
