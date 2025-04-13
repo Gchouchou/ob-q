@@ -307,8 +307,7 @@ This function is called by `org-edit-src-code'."
      ((and (buffer-live-p buffer)
            (comint-check-proc buffer))
       (message "Activating buffer %s" buffer)
-      (unless (eq q-active-buffer buffer)
-        (setq q-active-buffer buffer))
+      (setq q-active-buffer buffer)
       (display-buffer q-active-buffer))))
   ;; run hooks
   (mapc #'funcall ob-q-edit-prep-q-hook))
