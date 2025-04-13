@@ -285,6 +285,34 @@ This function is called by `org-babel-execute-src-block'"
                       (ob-q-post-process-result raw-output)))
           ('output raw-output))))))
 
+;;; org-babel prepare edit q src block
+
+(defvar ob-q-edit-prep-q-hook
+  nil
+  "List of functions to be run by `org-babel-edit-prep:q'.")
+
+(defun org-babel-edit-prep:q (babel-info)
+  "Use BABEL-INFO to pop up and activate the relevant q buffer.
+It then runs all hooks in `ob-q-edit-prep-q-hook'.
+This function is called by `org-edit-src-code'."
+  (let* ((header (caddr babel-info))
+         (handle (cdr (assq :handle header)))
+         (buffer (get-buffer (cdr (assq :session header)))))
+    (cond
+     ((string-match "^[^:]*:[0-9]*" handle)
+      (let* ((address (match-string 0 handle)))
+        (message "Activating qcon handle %s" address)
+        (save-excursion (q-qcon address)))
+      (display-buffer q-active-buffer))
+     ((and (buffer-live-p buffer)
+           (comint-check-proc buffer))
+      (message "Activating buffer %s" buffer)
+      (unless (eq q-active-buffer buffer)
+        (setq q-active-buffer buffer))
+      (display-buffer q-active-buffer))))
+  ;; run hooks
+  (mapc #'funcall ob-q-edit-prep-q-hook))
+
 ;;; pass q-program to async subprocess
 (add-hook 'ob-async-pre-execute-src-block-hook
           `(lambda ()
