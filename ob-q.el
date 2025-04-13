@@ -306,7 +306,7 @@ This function is called by `org-babel-execute-src-block'"
 
 (defvar ob-q-edit-prep-q-hook
   (list #'ob-q-activate-handle-session)
-  "Hook run after preparing in `org-babel-edit-prep:q'.")
+  "Hook run by `org-babel-edit-prep:q'.")
 
 ;;;###autoload
 (defun org-babel-edit-prep:q (babel-info)
