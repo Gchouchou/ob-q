@@ -301,7 +301,7 @@ This function is called by `org-edit-src-code'."
     (cond
      ((string-match-p "^[^:]*:[0-9]*$" handle)
       (message "Activating qcon handle %s" handle)
-      (save-excursion (q-qcon handle))
+      (q-qcon handle)
       (display-buffer q-active-buffer))
      ((and (buffer-live-p buffer)
            (comint-check-proc buffer))
