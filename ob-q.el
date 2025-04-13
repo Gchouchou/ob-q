@@ -287,15 +287,8 @@ This function is called by `org-babel-execute-src-block'"
 
 ;;; org-babel prepare edit q src block
 
-(defvar ob-q-edit-prep-q-hook
-  nil
-  "Hook run after preparing in `org-babel-edit-prep:q'.")
-
-;;;###autoload
-(defun org-babel-edit-prep:q (babel-info)
-  "Use BABEL-INFO to pop up and activate the relevant q buffer.
-It then runs all hooks in `ob-q-edit-prep-q-hook'.
-This function is called by `org-edit-src-code'."
+(defun ob-q-activate-handle-session (babel-info)
+  "Use BABEL-INFO to show and activate the relevant q buffer."
   (let* ((header (caddr babel-info))
          (handle (cdr (assq :handle header)))
          (session (cdr (assq :session header)))
@@ -309,9 +302,18 @@ This function is called by `org-edit-src-code'."
            (comint-check-proc buffer))
       (message "Activating buffer %s" buffer)
       (q-activate-buffer buffer)
-      (q-show-q-buffer))))
-  ;; run hooks
-  (mapc #'funcall ob-q-edit-prep-q-hook))
+      (q-show-q-buffer)))))
+
+(defvar ob-q-edit-prep-q-hook
+  (list #'ob-q-activate-handle-session)
+  "Hook run after preparing in `org-babel-edit-prep:q'.")
+
+;;;###autoload
+(defun org-babel-edit-prep:q (babel-info)
+  "Run all hooks in `ob-q-edit-prep-q-hook' with BABEL-INFO as argument.
+Returns `ob-q-edit-prep-q-hook'.
+This function is called by `org-edit-src-code'."
+  (mapc (lambda (hook) (funcall hook babel-info)) ob-q-edit-prep-q-hook))
 
 ;;; pass q-program to async subprocess
 (add-hook 'ob-async-pre-execute-src-block-hook
