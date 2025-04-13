@@ -291,6 +291,7 @@ This function is called by `org-babel-execute-src-block'"
   nil
   "Hook run after preparing in `org-babel-edit-prep:q'.")
 
+;;;###autoload
 (defun org-babel-edit-prep:q (babel-info)
   "Use BABEL-INFO to pop up and activate the relevant q buffer.
 It then runs all hooks in `ob-q-edit-prep-q-hook'.
