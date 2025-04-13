@@ -289,7 +289,7 @@ This function is called by `org-babel-execute-src-block'"
 
 (defvar ob-q-edit-prep-q-hook
   nil
-  "Hook run after running `org-babel-edit-prep:q'.")
+  "Hook run after preparing in `org-babel-edit-prep:q'.")
 
 (defun org-babel-edit-prep:q (babel-info)
   "Use BABEL-INFO to pop up and activate the relevant q buffer.
