@@ -299,10 +299,9 @@ This function is called by `org-edit-src-code'."
          (handle (cdr (assq :handle header)))
          (buffer (get-buffer (cdr (assq :session header)))))
     (cond
-     ((string-match "^[^:]*:[0-9]*$" handle)
-      (let* ((address (match-string 0 handle)))
-        (message "Activating qcon handle %s" address)
-        (save-excursion (q-qcon address)))
+     ((string-match-p "^[^:]*:[0-9]*$" handle)
+      (message "Activating qcon handle %s" handle)
+      (save-excursion (q-qcon handle))
       (display-buffer q-active-buffer))
      ((and (buffer-live-p buffer)
            (comint-check-proc buffer))
