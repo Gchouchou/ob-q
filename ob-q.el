@@ -195,17 +195,18 @@ rtype:type result;
 Returns the initialized session buffer."
   (unless (string= session "none")
     (let* ((session (or session "*org-babel-q*"))
-           (buffer (get-buffer-create session)))
+           (buffer (get-buffer session)))
       (cond
-       ((comint-check-proc buffer) buffer)                   ; already a q process
-       ((featurep 'q-mode)                                   ; check if q-mode is loaded
-        (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
-               (buffer2 (get-buffer q-active-buffer)))
-          (unless (eq buffer buffer2) (kill-buffer buffer))
-          (with-current-buffer buffer2
-            (rename-buffer session)                          ; massage the buffer name
-            (setq q-active-buffer buffer2)
-            (current-buffer))))))))
+       ((and (buffer-live-p buffer)
+             (comint-check-proc buffer))
+        buffer)                                                ; already a q process
+       (t (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
+                 (buffer2 (get-buffer q-active-buffer)))
+            (unless (eq buffer buffer2) (kill-buffer buffer))
+            (with-current-buffer buffer2
+              (rename-buffer session)                          ; massage the buffer name
+              (setq q-active-buffer buffer2)
+              (current-buffer))))))))
 
 ;;;###autoload
 (defvar org-babel-default-header-args:q (list '(:handle . "none")))
@@ -288,21 +289,24 @@ This function is called by `org-babel-execute-src-block'"
 ;;; org-babel prepare edit q src block
 
 (defun ob-q-activate-handle-session (babel-info)
-  "Use BABEL-INFO to show and activate the relevant q buffer."
+  "Use BABEL-INFO to show and activate the relevant q buffer.
+Returns t if activated a q buffer."
   (let* ((header (caddr babel-info))
          (handle (cdr (assq :handle header)))
          (session (cdr (assq :session header)))
-         (buffer (unless (string= session "none") (get-buffer session))))
+         (buffer (ob-q-initialize-session session)))
     (cond
      ((string-match-p "^[^:]*:[0-9]*$" handle)
       (message "Activating qcon handle %s" handle)
       (q-qcon handle)
-      (q-show-q-buffer))
+      (q-show-q-buffer)
+      t)
      ((and (buffer-live-p buffer)
            (comint-check-proc buffer))
       (message "Activating buffer %s" buffer)
       (q-activate-buffer buffer)
-      (q-show-q-buffer)))))
+      (q-show-q-buffer)
+      t))))
 
 (defvar ob-q-edit-prep-q-hook
   #'ob-q-activate-handle-session
