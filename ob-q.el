@@ -308,7 +308,7 @@ Returns t if activated a q buffer."
       (q-show-q-buffer)
       t))))
 
-(defvar ob-q-edit-prep-q-hook
+(defvar ob-q-edit-prep-q-func
   #'ob-q-activate-handle-session
   "Function run by `org-babel-edit-prep:q'.")
 
@@ -316,7 +316,8 @@ Returns t if activated a q buffer."
 (defun org-babel-edit-prep:q (babel-info)
   "Run the function in `ob-q-edit-prep-q-hook' with BABEL-INFO as argument.
 This function is called by `org-edit-src-code'."
-  (funcall ob-q-edit-prep-q-hook babel-info))
+  (when ob-q-edit-prep-q-func
+    (funcall ob-q-edit-prep-q-func babel-info)))
 
 ;;; pass q-program to async subprocess
 (add-hook 'ob-async-pre-execute-src-block-hook
