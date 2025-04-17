@@ -1,4 +1,4 @@
-;;; ob-q.el --- Org-babel functions for q evaluation
+;;; ob-q.el --- Org-babel functions for q evaluation -*- lexical-binding: nil -*-
 
 ;; Copyright (C) 2024 Justin Yu <jusytinyu@gmail.com>
 
@@ -50,8 +50,6 @@
 ;;; Code:
 
 (require 'ob)
-(require 'ob-eval)
-(require 'ob-comint)
 (require 'q-mode)
 
 (defvar org-babel-tangle-lang-exts)
