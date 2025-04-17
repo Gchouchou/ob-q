@@ -305,15 +305,14 @@ This function is called by `org-babel-execute-src-block'"
       (q-show-q-buffer)))))
 
 (defvar ob-q-edit-prep-q-hook
-  (list #'ob-q-activate-handle-session)
-  "Hook run by `org-babel-edit-prep:q'.")
+  #'ob-q-activate-handle-session
+  "Function run by `org-babel-edit-prep:q'.")
 
 ;;;###autoload
 (defun org-babel-edit-prep:q (babel-info)
-  "Run all hooks in `ob-q-edit-prep-q-hook' with BABEL-INFO as argument.
-Returns `ob-q-edit-prep-q-hook'.
+  "Run the function in `ob-q-edit-prep-q-hook' with BABEL-INFO as argument.
 This function is called by `org-edit-src-code'."
-  (mapc (lambda (hook) (funcall hook babel-info)) ob-q-edit-prep-q-hook))
+  (funcall ob-q-edit-prep-q-hook babel-info))
 
 ;;; pass q-program to async subprocess
 (add-hook 'ob-async-pre-execute-src-block-hook
