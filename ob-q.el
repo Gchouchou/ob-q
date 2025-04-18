@@ -45,7 +45,7 @@
 ;;; It defaults to q-mode's q-qcon-default-args value or a specified host:port.
 
 ;;; Requirements:
-;;; Package-Requires: ((emacs "28.1"))
+;;; Package-Requires: ((emacs "28.1") (q-mode))
 
 ;;; Code:
 
