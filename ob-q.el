@@ -294,6 +294,7 @@ Returns t if activated a q buffer."
          (session (cdr (assq :session header)))
          (buffer (ob-q-initialize-session session)))
     (cond
+     ;; NOTE: babel-info is not evaluated so we can have a raw SEXP
      ((when handle (not (string= "none" handle)))
       (message "Activating qcon handle %s" handle)
       (q-qcon handle)
