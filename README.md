@@ -83,5 +83,5 @@ which is only included in q version 4.1 and onwards.
 
 `ob-q` also implements `org-babel-edit-prep:q` function to prepare the special
 buffer by first displaying the infered `q-active-buffer` from header arguments.
-To turn off this functionality, set `ob-q-edit-prep-q-func` to `nil` or any
+To turn off this functionality, customize `ob-q-edit-prep-q-func` to `nil` or any
 other custom function.

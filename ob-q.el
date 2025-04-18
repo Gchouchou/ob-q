@@ -306,9 +306,11 @@ Returns t if activated a q buffer."
       (q-show-q-buffer)
       t))))
 
-(defvar ob-q-edit-prep-q-func
+(defcustom ob-q-edit-prep-q-func
   #'ob-q-activate-handle-session
-  "Function run by `org-babel-edit-prep:q'.")
+  "Function run by `org-babel-edit-prep:q'."
+  :type '(choice (const nil) function)
+  :group 'ob-q)
 
 ;;;###autoload
 (defun org-babel-edit-prep:q (babel-info)
