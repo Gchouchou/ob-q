@@ -202,9 +202,11 @@ Returns the initialized session buffer."
                  (buffer2 (get-buffer q-active-buffer)))
             (unless (or (eq buffer buffer2) (null buffer)) (kill-buffer buffer))
             (with-current-buffer buffer2
-              (rename-buffer session)                          ; massage the buffer name
-              (setq q-active-buffer buffer2)
-              (current-buffer))))))))
+              (rename-buffer session))                          ; massage the buffer name
+            (setq q-active-buffer buffer2)
+            ;; wait for process startup
+            (accept-process-output process 2)
+            buffer2)))))) 
 
 ;;;###autoload
 (defvar org-babel-default-header-args:q (list '(:handle . "none")))
