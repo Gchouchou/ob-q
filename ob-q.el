@@ -200,7 +200,7 @@ Returns the initialized session buffer."
         buffer)                                                ; already a q process
        (t (let* ((process (q q-host q-user (q-default-args)))  ; start q with defaults
                  (buffer2 (get-buffer q-active-buffer)))
-            (unless (eq buffer buffer2) (kill-buffer buffer))
+            (unless (or (eq buffer buffer2) (null buffer)) (kill-buffer buffer))
             (with-current-buffer buffer2
               (rename-buffer session)                          ; massage the buffer name
               (setq q-active-buffer buffer2)
