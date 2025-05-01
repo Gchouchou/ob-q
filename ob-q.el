@@ -206,7 +206,7 @@ Returns the initialized session buffer."
             (setq q-active-buffer buffer2)
             ;; wait for process startup
             (accept-process-output process 2)
-            buffer2)))))) 
+            buffer2))))))
 
 ;;;###autoload
 (defvar org-babel-default-header-args:q (list '(:handle . "none")))
